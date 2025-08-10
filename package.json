@@ -1,0 +1,21 @@
+{
+  "name": "zaim-matsui-auto-sync",
+  "version": "0.1.0",
+  "description": "松井証券のデータをZaimに自動連携するアプリケーション",
+  "keywords": [
+    "Zaim",
+    "松井証券"
+  ],
+  "license": "MIT",
+  "author": "na3shkw",
+  "type": "module",
+  "main": "main.ts",
+  "scripts": {
+    "start": "tsx src/main.ts",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "devDependencies": {
+    "tsx": "^4.20.3",
+    "typescript": "^5.9.2"
+  }
+}
