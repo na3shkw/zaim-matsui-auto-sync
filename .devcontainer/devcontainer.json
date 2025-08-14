@@ -39,7 +39,8 @@
 				}
 			},
 			"extensions": [
-				"esbenp.prettier-vscode"
+				"esbenp.prettier-vscode",
+				"google.gemini-cli-vscode-ide-companion"
 			]
 		}
 	},
