@@ -1,11 +1,16 @@
+import type { Dayjs } from "dayjs";
 import dayjs from "dayjs";
 import customParseFormat from "dayjs/plugin/customParseFormat.js";
 import type { BrowserContext, Page } from "playwright";
 import { chromium } from "playwright";
-import type { MatsuiAuthenticationCode } from "../../types/index.js";
 import { logger } from "../logger.js";
 
 dayjs.extend(customParseFormat);
+
+interface MatsuiAuthenticationCode {
+  authenticationCode: string; // 認証コード
+  timestamp: Dayjs; // 認証コードを受信したタイムスタンプ
+}
 
 const {
   AUTH_CODE_POLLING_INTERVAL_SECONDS,
@@ -61,7 +66,7 @@ async function findAuthenticationCode(page: Page): Promise<MatsuiAuthenticationC
       // dayjs().diff(timestampDayjs, 'minute') は現在時刻 - タイムスタンプ の差分（分）を返す
       if (dayjs().diff(timestampDayjs, "minute") < AUTH_CODE_VALIDITY_DURATION_MINUTES) {
         return {
-          authenticationCode: parseInt(authCodeMatch[1], 10),
+          authenticationCode: authCodeMatch[1],
           timestamp: timestampDayjs,
         };
       }
