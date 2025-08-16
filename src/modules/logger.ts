@@ -1,7 +1,9 @@
 import pino from "pino";
 
+const { LOG_LEVEL } = process.env;
+
 const pinoOptions: pino.LoggerOptions = {
-  level: "info",
+  level: LOG_LEVEL ?? "info",
   timestamp: pino.stdTimeFunctions.isoTime,
 };
 
