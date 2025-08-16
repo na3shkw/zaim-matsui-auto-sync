@@ -40,7 +40,8 @@
 			},
 			"extensions": [
 				"esbenp.prettier-vscode",
-				"google.gemini-cli-vscode-ide-companion"
+				"google.gemini-cli-vscode-ide-companion",
+				"MermaidChart.vscode-mermaid-chart"
 			]
 		}
 	},
