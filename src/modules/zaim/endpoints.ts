@@ -44,4 +44,11 @@ export class Endpoint {
   static get account(): string {
     return this.getFullUrl(this.ZAIM_API_BASE_URL, "/v2/home/account");
   }
+
+  /**
+   * 入出金・振替の履歴データ取得のためのAPIエンドポイントURL (`/v2/home/money`)
+   */
+  static get money(): string {
+    return this.getFullUrl(this.ZAIM_API_BASE_URL, "/v2/home/money");
+  }
 }

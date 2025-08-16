@@ -1,7 +1,14 @@
+import { logger } from "../logger.js";
 import { ZaimAuth } from "./auth.js";
 import { Endpoint } from "./endpoints.js";
 import { sendRequest } from "./request.js";
-import type { Account, AccountListResponse } from "./types.js";
+import type {
+  Account,
+  AccountListResponse,
+  GetJournalEntryParam,
+  JournalEntry,
+  JournalEntryListResponse,
+} from "./types.js";
 
 export class Zaim {
   private oauth: ZaimAuth;
@@ -22,7 +29,7 @@ export class Zaim {
   private async sendAuthenticatedRequest(
     url: string,
     method: string = "GET",
-    query: Record<string, string> = {},
+    query?: Record<string, string>,
     body?: string
   ): Promise<Record<string, any>> {
     // クエリパラメータをURLに追加する
@@ -63,5 +70,55 @@ export class Zaim {
         return conds.every((c) => c);
       })
       .sort((a, b) => a.sort - b.sort);
+  }
+
+  async getJournalEntry({
+    mode,
+    startDate,
+    endDate,
+    limit,
+    toAccountId,
+    page = 1,
+    activeOnly = true,
+  }: GetJournalEntryParam): Promise<JournalEntry[]> {
+    const url = Endpoint.money;
+    const param: Record<string, string> = {
+      mapping: "1",
+      // APIリクエストでpageを未指定にすると全件取得になる模様
+      page: String(Math.max(page, 1)),
+    };
+    if (mode) {
+      param["mode"] = mode;
+    }
+    if (startDate) {
+      param["start_date"] = startDate.format("YYYY-MM-DD");
+    }
+    if (endDate) {
+      param["end_date"] = endDate.format("YYYY-MM-DD");
+    }
+    if (limit) {
+      if (limit > 100) {
+        logger.warn("limitに指定できる最大値は100です。100に切り下げて実行します。");
+      }
+      param["limit"] = String(Math.min(limit, 100));
+    }
+    const res = (await this.sendAuthenticatedRequest(
+      url,
+      "GET",
+      param
+    )) as JournalEntryListResponse;
+    const journalEntries: JournalEntry[] = res.money;
+    return journalEntries.filter((journalEntry) => {
+      const conds = [];
+      // active = 1のもの
+      if (activeOnly) {
+        conds.push(journalEntry.active === 1);
+      }
+      // to_account_idが一致するもの
+      if (toAccountId) {
+        conds.push(journalEntry.to_account_id === toAccountId);
+      }
+      return conds.every((c) => c);
+    });
   }
 }

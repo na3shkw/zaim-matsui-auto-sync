@@ -1,3 +1,5 @@
+import type { Dayjs } from "dayjs";
+
 export interface Account {
   id: number;
   name: string;
@@ -12,4 +14,40 @@ export interface Account {
 export interface AccountListResponse {
   accounts: Account[];
   requested: number;
+}
+
+export type JournalType = "income" | "payment" | "transfer";
+
+export interface JournalEntry {
+  id: number;
+  mode: JournalType;
+  user_id: number;
+  date: string;
+  category_id: number;
+  genre_id: number;
+  to_account_id: number;
+  from_account_id: number;
+  amount: number;
+  comment: string;
+  active: number;
+  name: string;
+  receipt_id: number;
+  place: string;
+  created: string;
+  currency_code: string;
+}
+
+export interface JournalEntryListResponse {
+  money: JournalEntry[];
+  requested: number;
+}
+
+export interface GetJournalEntryParam {
+  mode?: JournalType;
+  startDate?: Dayjs | undefined;
+  endDate?: Dayjs | undefined;
+  limit?: number;
+  toAccountId?: number;
+  page?: number;
+  activeOnly?: boolean;
 }
