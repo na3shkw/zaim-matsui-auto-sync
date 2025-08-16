@@ -144,3 +144,6 @@ vite.config.ts.timestamp-*
 # Chromium data
 chromium_data/*
 !chromium_data/.gitkeep
+
+# Zaim Token
+zaim-tokens.json
