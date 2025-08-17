@@ -141,6 +141,12 @@ vite.config.ts.timestamp-*
 # Gemini Configuration files
 .devcontainer/gemini-config
 
+# Claude Configuration files
+.devcontainer/claude-config
+
+# Command History
+.devcontainer/.bash_history
+
 # Chromium data
 chromium_data/*
 !chromium_data/.gitkeep

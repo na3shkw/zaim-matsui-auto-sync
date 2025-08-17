@@ -15,7 +15,8 @@
 	"postCreateCommand": "bash .devcontainer/post-create.sh",
 
 	"containerEnv": {
-		"TZ": "Asia/Tokyo"
+		"TZ": "Asia/Tokyo",
+		"PROMPT_COMMAND": "history -a"
 	},
 
 	// Configure tool-specific properties.
@@ -39,6 +40,7 @@
 				}
 			},
 			"extensions": [
+				"Anthropic.claude-code",
 				"esbenp.prettier-vscode",
 				"google.gemini-cli-vscode-ide-companion",
 				"MermaidChart.vscode-mermaid-chart"
@@ -48,7 +50,14 @@
 
 	// Mounts source folder to target folder.
 	"mounts": [
-		"source=${localWorkspaceFolder}/.devcontainer/gemini-config,target=/home/node/.gemini,type=bind"
+		// Gemini CLI
+		"source=${localWorkspaceFolder}/.devcontainer/gemini-config,target=/home/node/.gemini,type=bind",
+		"source=${localWorkspaceFolder}/.devcontainer/gemini-config,target=/home/node/.gemini,type=bind",
+		// Claude Code
+		"source=${localWorkspaceFolder}/.devcontainer/claude-config/.claude.json,target=/home/node/.claude.json,type=bind",
+		"source=${localWorkspaceFolder}/.devcontainer/claude-config/.claude,target=/home/node/.claude,type=bind",
+		// Bash history
+		"source=${localWorkspaceFolder}/.devcontainer/.bash_history,target=/home/node/.bash_history,type=bind"
 	]
 
 	// Uncomment to connect as root instead. More info: https://aka.ms/dev-containers-non-root.
