@@ -113,7 +113,7 @@ async function login(page: Page): Promise<void> {
 
   await page.waitForLoadState("networkidle");
 
-  // フォーム要素の存在確認
+  // ログイン情報を入力
   await page.getByLabel("ログインID").fill(MATSUI_LOGIN_ID);
   await page.getByLabel("パスワード").fill(MATSUI_PASSWORD);
 
