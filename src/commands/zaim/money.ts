@@ -33,7 +33,7 @@ moneyCommand
       endDate,
       limit: options.limit,
       page: options.page,
-      toAccountId: options.toAccountId,
+      toAccountId: parseInt(options.toAccountId, 10),
     });
     console.table(journalEntries, [
       "id",
@@ -47,4 +47,23 @@ moneyCommand
       "comment",
       "name",
     ]);
+  });
+
+moneyCommand
+  .command("register-income")
+  .description("入金を登録する")
+  .requiredOption("--category-id <value>", "カテゴリID")
+  .requiredOption("--amount <value>", "小数点なしの金額")
+  .option("--date [date]", "日付（過去3か月以内）", dayjs().format("YYYY-MM-DD"))
+  .option("--to-account-id [value]", "入金先の口座ID")
+  .option("--comment [value]", "コメント")
+  .action(async (options) => {
+    const res = await zaim.registerIncomeJournalEntry({
+      categoryId: options.categoryId,
+      amount: options.amount,
+      date: dayjs(options.date, "YYYY-MM-DD"),
+      toAccountId: options.toAccountId,
+      comment: options.comment,
+    });
+    console.log(res);
   });

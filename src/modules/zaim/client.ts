@@ -10,6 +10,8 @@ import type {
   GetJournalEntryParam,
   JournalEntry,
   JournalEntryListResponse,
+  RegisterIncomeJournalEntryParam,
+  RegisterIncomeJournalEntryResponse,
 } from "./types.js";
 
 export class Zaim {
@@ -31,15 +33,23 @@ export class Zaim {
   private async sendAuthenticatedRequest(
     url: string,
     method: string = "GET",
-    query?: Record<string, string>,
+    query?: Record<string, string | number | undefined>,
     body?: string
   ): Promise<Record<string, any>> {
     // クエリパラメータをURLに追加する
+    let filteredQuery: Record<string, string> | undefined;
     if (query) {
-      url = `${url}?${new URLSearchParams(query).toString()}`;
+      filteredQuery = {};
+      // 値がundefinedのものは除外し、そうでないものは文字列に変換する
+      Object.entries(query).forEach(([key, value]) => {
+        if (typeof value !== "undefined") {
+          filteredQuery![key] = String(value);
+        }
+      });
+      url = `${url}?${new URLSearchParams(filteredQuery).toString()}`;
     }
 
-    const authHeader = this.oauth.generateAuthHeader(method, url, query);
+    const authHeader = this.oauth.generateAuthHeader(method, url, filteredQuery);
 
     const jsonString = await sendRequest(
       url,
@@ -126,6 +136,20 @@ export class Zaim {
       }
       return conds.every((c) => c);
     });
+  }
+
+  async registerIncomeJournalEntry(
+    params: RegisterIncomeJournalEntryParam
+  ): Promise<RegisterIncomeJournalEntryResponse> {
+    const url = Endpoint.moneyIncome;
+    return (await this.sendAuthenticatedRequest(url, "POST", {
+      mapping: 1,
+      category_id: params.categoryId,
+      amount: params.amount,
+      date: params.date.format("YYYY-MM-DD"),
+      to_account_id: params.toAccountId,
+      comment: params.comment,
+    })) as RegisterIncomeJournalEntryResponse;
   }
 
   async getCategory(mode?: string, activeOnly = true): Promise<Category[]> {
