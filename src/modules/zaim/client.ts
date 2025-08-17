@@ -76,6 +76,7 @@ export class Zaim {
 
   async getJournalEntry({
     mode,
+    categoryId,
     startDate,
     endDate,
     limit,
@@ -103,6 +104,9 @@ export class Zaim {
         logger.warn("limitに指定できる最大値は100です。100に切り下げて実行します。");
       }
       param["limit"] = String(Math.min(limit, 100));
+    }
+    if (categoryId) {
+      param["category_id"] = String(categoryId);
     }
     const res = (await this.sendAuthenticatedRequest(
       url,

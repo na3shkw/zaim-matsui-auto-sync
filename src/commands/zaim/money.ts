@@ -16,6 +16,7 @@ moneyCommand
       "transfer",
     ])
   )
+  .option("--category-id [value]", "カテゴリID")
   .option("--start-date [date]", "開始日")
   .option("--end-date [date]", "開始日")
   .option("--limit [value]", "1ページ当たりの表示件数")
@@ -27,6 +28,7 @@ moneyCommand
     const endDate = options.endDate ? parseDate(options.endDate) : undefined;
     const journalEntries = await zaim.getJournalEntry({
       mode: options.mode,
+      categoryId: options.categoryId,
       startDate,
       endDate,
       limit: options.limit,

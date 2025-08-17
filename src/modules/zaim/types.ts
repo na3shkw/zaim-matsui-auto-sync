@@ -44,6 +44,7 @@ export interface JournalEntryListResponse {
 
 export interface GetJournalEntryParam {
   mode?: JournalType;
+  categoryId?: number;
   startDate?: Dayjs | undefined;
   endDate?: Dayjs | undefined;
   limit?: number;
