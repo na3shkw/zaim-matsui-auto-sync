@@ -51,4 +51,11 @@ export class Endpoint {
   static get money(): string {
     return this.getFullUrl(this.ZAIM_API_BASE_URL, "/v2/home/money");
   }
+
+  /**
+   * カテゴリリスト取得のためのAPIエンドポイントURL (`/v2/home/category`)
+   */
+  static get category(): string {
+    return this.getFullUrl(this.ZAIM_API_BASE_URL, "/v2/home/category");
+  }
 }

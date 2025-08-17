@@ -51,3 +51,18 @@ export interface GetJournalEntryParam {
   page?: number;
   activeOnly?: boolean;
 }
+
+export interface Category {
+  id: number;
+  name: string;
+  mode: string;
+  sort: number;
+  parent_category_id: number;
+  active: number;
+  modified: string;
+}
+
+export interface CategoryListResponse {
+  categories: Category[];
+  requested: number;
+}

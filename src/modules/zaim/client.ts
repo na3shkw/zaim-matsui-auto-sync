@@ -5,6 +5,8 @@ import { sendRequest } from "./request.js";
 import type {
   Account,
   AccountListResponse,
+  Category,
+  CategoryListResponse,
   GetJournalEntryParam,
   JournalEntry,
   JournalEntryListResponse,
@@ -117,6 +119,26 @@ export class Zaim {
       // to_account_idが一致するもの
       if (toAccountId) {
         conds.push(journalEntry.to_account_id === toAccountId);
+      }
+      return conds.every((c) => c);
+    });
+  }
+
+  async getCategory(mode?: string, activeOnly = true): Promise<Category[]> {
+    const url = Endpoint.category;
+    const res = (await this.sendAuthenticatedRequest(url, "GET", {
+      mapping: "1",
+    })) as CategoryListResponse;
+    const categories: Category[] = res.categories;
+    return categories.filter((category) => {
+      const conds = [];
+      // active = 1のもの
+      if (activeOnly) {
+        conds.push(category.active === 1);
+      }
+      // modeが一致するもの
+      if (mode) {
+        conds.push(category.mode === mode);
       }
       return conds.every((c) => c);
     });
