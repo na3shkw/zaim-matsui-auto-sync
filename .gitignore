@@ -144,6 +144,9 @@ vite.config.ts.timestamp-*
 # Claude Configuration files
 .devcontainer/claude-config
 
+# Serena configuration files
+.serena
+
 # Command History
 .devcontainer/.bash_history
 
