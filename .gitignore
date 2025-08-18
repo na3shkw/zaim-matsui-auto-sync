@@ -156,3 +156,6 @@ chromium_data/*
 
 # Zaim Token
 zaim-tokens.json
+
+# Zaim Total Amount Data
+zaim-total-amount.json
