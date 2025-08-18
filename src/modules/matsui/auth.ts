@@ -2,8 +2,8 @@ import type { Dayjs } from "dayjs";
 import dayjs from "dayjs";
 import customParseFormat from "dayjs/plugin/customParseFormat.js";
 import type { BrowserContext, Page } from "playwright";
-import { chromium } from "playwright";
 import { logger } from "../logger.js";
+import { openBrowser } from "./browser.js";
 
 dayjs.extend(customParseFormat);
 
@@ -87,16 +87,14 @@ export async function getAuthenticationCode(): Promise<MatsuiAuthenticationCode>
     );
   }
 
-  let browserContext: BrowserContext | null = null;
+  let browserContext: BrowserContext | undefined = undefined;
 
   try {
-    browserContext = await chromium.launchPersistentContext(CHROMIUM_USER_DATA_DIR_GOOGLE, {
-      headless: HEADLESS === "true",
-    });
-    const page = browserContext.pages()[0];
-    if (!page) {
-      throw Error("予期せぬエラーによりページを開けません。");
-    }
+    let page: Page | undefined = undefined;
+    ({ browserContext, page } = await openBrowser(
+      CHROMIUM_USER_DATA_DIR_GOOGLE,
+      HEADLESS === "true"
+    ));
 
     await page.goto(GOOGLE_MESSAGE_MATSUI_CONVERSATION_URL);
 

@@ -1,9 +1,10 @@
 import fs from "fs";
 import path from "path";
 import type { BrowserContext, Page } from "playwright";
-import playwright, { chromium } from "playwright";
+import playwright from "playwright";
 import { logger } from "../logger.js";
 import { getAuthenticationCode } from "./auth.js";
+import { openBrowser } from "./browser.js";
 import { MatsuiPage } from "./page.js";
 
 interface MatsuiScraper {
@@ -194,16 +195,13 @@ export async function scrapeMatsui(): Promise<MatsuiScraper> {
     throw new Error("環境変数 CHROMIUM_USER_DATA_DIR_MATSUI が設定されていません。");
   }
 
-  let browserContext: BrowserContext | null = null;
+  let browserContext: BrowserContext | undefined = undefined;
   let page: Page | undefined = undefined;
   try {
-    browserContext = await chromium.launchPersistentContext(CHROMIUM_USER_DATA_DIR_MATSUI, {
-      headless: HEADLESS === "true",
-    });
-    page = browserContext.pages()[0];
-    if (!page) {
-      throw Error("予期せぬエラーによりページを開けません。");
-    }
+    ({ browserContext, page } = await openBrowser(
+      CHROMIUM_USER_DATA_DIR_MATSUI,
+      HEADLESS === "true"
+    ));
 
     // Cookie復元を試行
     const cookiesRestored = await restoreCookies(browserContext);
