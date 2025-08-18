@@ -1,19 +1,13 @@
 import crypto from "crypto";
 import fs from "fs";
+import OAuth from "oauth-1.0a";
 import { URLSearchParams } from "url";
 import { logger } from "../logger.js";
-import { getJoinedParamString, getUserInput } from "../utils.js";
+import { getUserInput } from "../utils.js";
 import { Endpoint } from "./endpoints.js";
 import { sendRequest } from "./request.js";
 
 const { ZAIM_CONSUMER_KEY, ZAIM_CONSUMER_SECRET, ZAIM_ACCESS_TOKEN_FILE } = process.env;
-
-interface OAuthConsumerCredentials {
-  consumerKey: string;
-  consumerSecret: string;
-  token?: string;
-  tokenSecret?: string;
-}
 
 interface OAuthToken {
   oauth_token: string;
@@ -24,13 +18,9 @@ interface OAuthTokenResponse extends OAuthToken {
   oauth_callback_confirmed: string;
 }
 
-interface AccessTokenResponse {
-  oauth_token: string;
-  oauth_token_secret: string;
-}
-
 export class ZaimAuth {
-  private credentials: OAuthConsumerCredentials;
+  private oauthAccessToken?: OAuth.Token;
+  private oauth: OAuth;
 
   constructor(authenticate: boolean = false) {
     if (!ZAIM_CONSUMER_KEY || !ZAIM_CONSUMER_SECRET) {
@@ -38,10 +28,16 @@ export class ZaimAuth {
         "環境変数 ZAIM_CONSUMER_KEY または ZAIM_CONSUMER_SECRET が設定されていません。"
       );
     }
-    this.credentials = {
-      consumerKey: ZAIM_CONSUMER_KEY,
-      consumerSecret: ZAIM_CONSUMER_SECRET,
-    };
+    this.oauth = new OAuth({
+      consumer: {
+        key: ZAIM_CONSUMER_KEY,
+        secret: ZAIM_CONSUMER_SECRET,
+      },
+      signature_method: "HMAC-SHA1",
+      hash_function(base_string, key) {
+        return crypto.createHmac("sha1", key).update(base_string).digest("base64");
+      },
+    });
     if (authenticate) {
       this.authenticate();
     }
@@ -54,8 +50,10 @@ export class ZaimAuth {
    * @param oauthToken OAuthトークンのオブジェクト
    */
   private setAccessToken(oauthToken: OAuthToken): void {
-    this.credentials.token = oauthToken.oauth_token;
-    this.credentials.tokenSecret = oauthToken.oauth_token_secret;
+    this.oauthAccessToken = {
+      key: oauthToken.oauth_token,
+      secret: oauthToken.oauth_token_secret,
+    };
   }
 
   /**
@@ -75,40 +73,6 @@ export class ZaimAuth {
       throw new Error("アクセストークンの内容が不正です。認証を行ってください。");
     }
     this.setAccessToken(accessToken);
-  }
-
-  /**
-   * OAuth 1.0a署名を生成する
-   *
-   * @param method HTTPメソッド
-   * @param url URL
-   * @param params URLパラメータ
-   * @param tokenSecret トークンシークレット
-   * @returns OAuth 1.0a署名
-   */
-  private generateSignature(
-    method: string,
-    url: string,
-    params: Record<string, string>,
-    tokenSecret: string = ""
-  ): string {
-    // すべてのパラメータ（OAuth + クエリパラメータ）をソートして&で結合
-    const joinedParam = getJoinedParamString(params, "&");
-
-    // URLからクエリパラメータを除去
-    const baseUrl = url.replace(/\?.+/, "");
-
-    const signatureBaseString = [
-      method.toUpperCase(),
-      encodeURIComponent(baseUrl),
-      encodeURIComponent(joinedParam),
-    ].join("&");
-
-    const signingKey = `${encodeURIComponent(this.credentials.consumerSecret)}&${encodeURIComponent(
-      tokenSecret
-    )}`;
-
-    return crypto.createHmac("sha1", signingKey).update(signatureBaseString).digest("base64");
   }
 
   /**
@@ -148,7 +112,7 @@ export class ZaimAuth {
    * @param verifier 認証コード
    * @returns アクセストークンのオブジェクト
    */
-  private async getAccessToken(verifier: string): Promise<AccessTokenResponse> {
+  private async getAccessToken(verifier: string): Promise<OAuthToken> {
     const url = Endpoint.accessToken;
     const authHeader = this.generateAuthHeader("POST", url, {
       oauth_verifier: verifier,
@@ -225,39 +189,18 @@ export class ZaimAuth {
    *
    * @param method HTTPメソッド
    * @param url URL
-   * @param queryParams URLパラメータ
+   * @param data カスタムデータ（oauth_*のオプションも含む）
    * @returns OAuthヘッダー
    */
-  generateAuthHeader(
-    method: string,
-    url: string,
-    queryParams: Record<string, string> = {}
-  ): string {
-    const timestamp = Math.floor(Date.now() / 1000).toString();
-    const nonce = crypto.randomBytes(16).toString("hex");
-
-    const oauthParams: Record<string, string> = {
-      oauth_consumer_key: this.credentials.consumerKey,
-      oauth_nonce: nonce,
-      oauth_signature_method: "HMAC-SHA1",
-      oauth_timestamp: timestamp,
-      oauth_version: "1.0",
-    };
-
-    if (this.credentials.token) {
-      oauthParams.oauth_token = this.credentials.token;
-    }
-
-    // OAuthパラメータとクエリパラメータを結合
-    const allParams = { ...oauthParams, ...queryParams };
-
-    const signature = this.generateSignature(method, url, allParams, this.credentials.tokenSecret);
-
-    oauthParams.oauth_signature = signature;
-
-    // AuthorizationヘッダーにはOAuth関連パラメータのみ含める
-    const headerParts = getJoinedParamString(oauthParams, ", ", '"');
-
-    return `OAuth ${headerParts}`;
+  generateAuthHeader(method: string, url: string, data?: Record<string, string>): string {
+    const oauthData = this.oauth.authorize(
+      {
+        url,
+        method,
+        data,
+      },
+      this.oauthAccessToken
+    );
+    return this.oauth.toHeader(oauthData).Authorization;
   }
 }

@@ -15,10 +15,10 @@ import type {
 } from "./types.js";
 
 export class Zaim {
-  private oauth: ZaimAuth;
+  private auth: ZaimAuth;
 
   constructor(authenticate = false) {
-    this.oauth = new ZaimAuth(authenticate);
+    this.auth = new ZaimAuth(authenticate);
   }
 
   /**
@@ -49,7 +49,7 @@ export class Zaim {
       url = `${url}?${new URLSearchParams(filteredQuery).toString()}`;
     }
 
-    const authHeader = this.oauth.generateAuthHeader(method, url, filteredQuery);
+    const authHeader = this.auth.generateAuthHeader(method, url);
 
     const jsonString = await sendRequest(
       url,
