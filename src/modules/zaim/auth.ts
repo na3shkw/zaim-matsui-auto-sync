@@ -122,9 +122,17 @@ export class ZaimAuth {
       oauth_callback: "oob",
     });
 
-    const response = await sendRequest(url, "POST", {
-      Authorization: authHeader,
-    });
+    // POSTボディにoauth_callbackを含める
+    const postData = "oauth_callback=oob";
+
+    const response = await sendRequest(
+      url,
+      "POST",
+      {
+        Authorization: authHeader,
+      },
+      postData
+    );
 
     const params = new URLSearchParams(response);
     return {
@@ -146,9 +154,17 @@ export class ZaimAuth {
       oauth_verifier: verifier,
     });
 
-    const response = await sendRequest(url, "POST", {
-      Authorization: authHeader,
-    });
+    // POSTボディにoauth_verifierを含める
+    const postData = `oauth_verifier=${encodeURIComponent(verifier)}`;
+
+    const response = await sendRequest(
+      url,
+      "POST",
+      {
+        Authorization: authHeader,
+      },
+      postData
+    );
 
     const params = new URLSearchParams(response);
     return {

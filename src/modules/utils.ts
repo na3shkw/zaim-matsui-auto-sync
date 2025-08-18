@@ -19,20 +19,10 @@ export function getJoinedParamString(
   separator: string,
   valueQuotationChar = ""
 ): string {
-  return Object.entries(obj)
-    .sort((a, b) =>
-      // 自然順ソート
-      a[0].localeCompare(b[0], undefined, {
-        numeric: true,
-        sensitivity: "base",
-      })
-    )
-    .map(([key, value]) => {
-      const encodedKey = encodeURIComponent(key);
-      const encodedValue = encodeURIComponent(value);
-      const quot = valueQuotationChar;
-      return `${encodedKey}=${quot}${encodedValue}${quot}`;
-    })
+  const quot = valueQuotationChar;
+  return Object.keys(obj)
+    .sort()
+    .map((key) => `${encodeURIComponent(key)}=${quot}${encodeURIComponent(obj[key])}${quot}`)
     .join(separator);
 }
 
