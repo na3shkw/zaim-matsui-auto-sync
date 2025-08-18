@@ -1,5 +1,3 @@
-import https from "https";
-
 /**
  * HTTPSリクエストを送信する
  *
@@ -15,46 +13,30 @@ export async function sendRequest(
   headers: Record<string, string> = {},
   body?: string
 ): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const urlObj = new URL(url);
+  const requestHeaders: Record<string, string> = {
+    "content-type": "application/x-www-form-urlencoded",
+    ...headers,
+  };
 
-    const contentLength = body ? { "content-length": Buffer.byteLength(body) } : {};
-    const options: https.RequestOptions = {
-      hostname: urlObj.hostname,
-      port: urlObj.port || 443,
-      path: urlObj.pathname + urlObj.search,
-      method,
-      headers: {
-        "content-type": "application/x-www-form-urlencoded",
-        ...contentLength,
-        ...headers,
-      },
-    };
+  if (body) {
+    requestHeaders["content-length"] = Buffer.byteLength(body).toString();
+  }
 
-    const req = https.request(options, (res) => {
-      let data = "";
+  const fetchOptions: RequestInit = {
+    method,
+    headers: requestHeaders,
+  };
 
-      res.on("data", (chunk) => {
-        data += chunk;
-      });
+  if (body) {
+    fetchOptions.body = body;
+  }
 
-      res.on("end", () => {
-        if (res.statusCode && res.statusCode >= 200 && res.statusCode < 300) {
-          resolve(data);
-        } else {
-          reject(new Error(`HTTP ${res.statusCode}: ${data}`));
-        }
-      });
-    });
+  const response = await fetch(url, fetchOptions);
 
-    req.on("error", (error) => {
-      reject(error);
-    });
+  if (!response.ok) {
+    const errorText = await response.text();
+    throw new Error(`HTTP ${response.status}: ${errorText}`);
+  }
 
-    if (body) {
-      req.write(body);
-    }
-
-    req.end();
-  });
+  return await response.text();
 }
