@@ -1,3 +1,4 @@
+#!/usr/bin/env node
 import { Command } from "commander";
 import dayjs from "dayjs";
 import fs from "fs";

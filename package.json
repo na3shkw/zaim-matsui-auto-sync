@@ -9,9 +9,17 @@
   "license": "MIT",
   "author": "na3shkw",
   "type": "module",
+  "bin": {
+    "sync-matsui-zaim": "./dist/commands/sync-matsui-zaim.js",
+    "zaim-cli": "./dist/commands/zaim/index.js"
+  },
   "scripts": {
     "start": "tsx --env-file=.env src/commands/sync-matsui-zaim.ts",
     "zaim-cli": "tsx --env-file=.env src/commands/zaim/index.ts",
+    "build": "tsc",
+    "postbuild": "chmod +x dist/commands/sync-matsui-zaim.js dist/commands/zaim/index.js",
+    "build:watch": "tsc --watch",
+    "clean": "rm -rf dist",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "devDependencies": {
