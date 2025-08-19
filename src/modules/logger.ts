@@ -1,20 +1,63 @@
 import pino from "pino";
 
-const { LOG_LEVEL } = process.env;
+export type LogTransport = "pretty" | "syslog";
 
-const pinoOptions: pino.LoggerOptions = {
-  level: LOG_LEVEL ?? "info",
-  timestamp: pino.stdTimeFunctions.isoTime,
-};
+class LoggerManager {
+  private static instance: pino.Logger;
+  private static transport: LogTransport = "pretty";
 
-if (process.env.NODE_ENV !== "production") {
-  pinoOptions.transport = {
-    target: "pino-pretty",
-    options: {
-      translateTime: true,
-      colorize: true,
-    },
-  };
+  static configure(transport: LogTransport) {
+    this.transport = transport;
+    this.instance = this.createLogger(transport);
+  }
+
+  static getInstance(): pino.Logger {
+    if (!this.instance) {
+      this.instance = this.createLogger(this.transport);
+    }
+    return this.instance;
+  }
+
+  private static createLogger(transport: LogTransport) {
+    const pinoOptions: pino.LoggerOptions = {
+      level: process.env.LOG_LEVEL ?? "info",
+    };
+
+    if (transport === "syslog") {
+      pinoOptions.transport = {
+        target: "pino-syslog",
+        options: {
+          enablePipelining: false,
+          destination: 1,
+        },
+      };
+    } else {
+      pinoOptions.timestamp = pino.stdTimeFunctions.isoTime;
+      pinoOptions.transport = {
+        target: "pino-pretty",
+        options: {
+          translateTime: true,
+          colorize: true,
+        },
+      };
+    }
+
+    return pino(pinoOptions);
+  }
 }
 
-export const logger = pino(pinoOptions);
+// Proxyを使って動的にloggerインスタンスを取得
+export const logger = new Proxy({} as pino.Logger, {
+  get(_, prop) {
+    const currentLogger = LoggerManager.getInstance();
+    const value = currentLogger[prop as keyof pino.Logger];
+    if (typeof value === "function") {
+      return value.bind(currentLogger);
+    }
+    return value;
+  },
+});
+
+export const configureLogger = (transport: LogTransport) => {
+  LoggerManager.configure(transport);
+};

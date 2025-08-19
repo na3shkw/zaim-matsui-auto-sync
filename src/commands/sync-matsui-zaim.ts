@@ -1,7 +1,7 @@
 import { Command } from "commander";
 import dayjs from "dayjs";
 import fs from "fs";
-import { logger, scrapeMatsui, Zaim } from "../modules/index.js";
+import { configureLogger, logger, scrapeMatsui, Zaim } from "../modules/index.js";
 
 const { ZAIM_MATSUI_INCOME_CATEGORY_ID, ZAIM_MATSUI_ACCOUNT_ID, ZAIM_TOTAL_AMOUNT_FILE } =
   process.env;
@@ -17,8 +17,15 @@ const program = new Command();
 program
   .name("sync-matsui-zaim")
   .description("松井証券の資産情報をZaimに同期する")
-  .action(async () => {
+  .option("--pretty-log", "整形されたログを出力する", false)
+  .option("--dry-run", "ドライラン（Zaimへの記録を行わない）", false)
+  .action(async (options) => {
     try {
+      if (!options.prettyLog) {
+        configureLogger("syslog");
+      }
+      const { dryRun } = options;
+
       if (!ZAIM_MATSUI_INCOME_CATEGORY_ID || !ZAIM_MATSUI_ACCOUNT_ID || !ZAIM_TOTAL_AMOUNT_FILE) {
         const vars = [
           "ZAIM_MATSUI_INCOME_CATEGORY_ID",
@@ -61,6 +68,11 @@ program
 
       const amount = nisaData.nisaTotalMarketValue - nisaLastAmountValue;
       logger.info(`記録する金額は ${amount} 円です。`);
+
+      if (dryRun) {
+        logger.info("ドライランモードのためZaimへの記録は行わず終了します。");
+        return;
+      }
 
       // Zaim APIにデータを送信
       const zaim = new Zaim();
