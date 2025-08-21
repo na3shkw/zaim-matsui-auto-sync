@@ -1,0 +1,27 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        UID: ${UID:-1000}
+        GID: ${GID:-1000}
+    environment:
+      NODE_ENV: production
+      CHROMIUM_USER_DATA_DIR_GOOGLE: /data/chromium/google
+      CHROMIUM_USER_DATA_DIR_MATSUI: /data/chromium/matsui
+      ZAIM_ACCESS_TOKEN_FILE: /data/zaim/zaim-tokens.json
+      ZAIM_TOTAL_AMOUNT_FILE: /data/zaim/zaim-total-amount.json
+    env_file:
+      - .env
+    volumes:
+      - type: volume
+        source: chromium-data
+        target: /data/chromium
+      - type: bind
+        source: ./zaim_data
+        target: /data/zaim
+        consistency: consistent
+
+volumes:
+  chromium-data:
