@@ -155,6 +155,8 @@ async function login(page: Page): Promise<void> {
  */
 async function getNisaPositionData(page: Page): Promise<NisaPosition> {
   await page.goto(MatsuiPage.nisa);
+  // 残高読み込みを待機する
+  await page.waitForSelector(".loadmask", { state: "detached" });
   const trs = await page.locator("table[aria-describedby='NISA保有残高'] tr").all();
   const getRowData = async (tr: playwright.Locator) =>
     (await tr.allInnerTexts()).join("").split(/\s+/);
@@ -223,6 +225,7 @@ export async function scrapeMatsui(): Promise<MatsuiScraper> {
 
     logger.info("NISA保有残高を取得します。");
     const nisaPositionData = await getNisaPositionData(page);
+    logger.debug(nisaPositionData);
     logger.info("NISA保有残高の取得が完了しました。");
 
     const nisaTotalMarketValue = nisaPositionData["合計"]["時価評価額"];
