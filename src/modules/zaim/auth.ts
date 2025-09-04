@@ -40,8 +40,9 @@ export class ZaimAuth {
     });
     if (authenticate) {
       this.authenticate();
+    } else {
+      this.loadAccessToken();
     }
-    this.loadAccessToken();
   }
 
   /**
@@ -176,6 +177,9 @@ export class ZaimAuth {
         encoding: "utf-8",
       });
       console.log("✅ アクセストークンを取得して保存しました！\n");
+
+      // 認証完了後、取得したアクセストークンを設定
+      this.setAccessToken(accessToken);
 
       console.log("🎉 認証が完了しました！");
     } catch (error) {

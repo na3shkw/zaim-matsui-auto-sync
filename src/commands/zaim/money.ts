@@ -2,8 +2,6 @@ import { Command, Option } from "commander";
 import dayjs from "dayjs";
 import { Zaim } from "../../modules/index.js";
 
-const zaim = new Zaim();
-
 export const moneyCommand = new Command("money").description("入出金や振替の記録に関するコマンド");
 
 moneyCommand
@@ -23,6 +21,7 @@ moneyCommand
   .option("--page [value]", "表示するページ", "1")
   .option("--to-account-id [value]", "入金先・振替先の口座ID（完全一致）")
   .action(async (options) => {
+    const zaim = new Zaim();
     const parseDate = (text: string) => dayjs(text, "YYYY-MM-DD");
     const startDate = options.startDate ? parseDate(options.startDate) : undefined;
     const endDate = options.endDate ? parseDate(options.endDate) : undefined;
@@ -58,6 +57,7 @@ moneyCommand
   .option("--to-account-id [value]", "入金先の口座ID")
   .option("--comment [value]", "コメント")
   .action(async (options) => {
+    const zaim = new Zaim();
     const res = await zaim.registerIncomeJournalEntry({
       categoryId: options.categoryId,
       amount: options.amount,
