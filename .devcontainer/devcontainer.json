@@ -16,7 +16,11 @@
 
 	"containerEnv": {
 		"TZ": "Asia/Tokyo",
-		"PROMPT_COMMAND": "history -a"
+		"PROMPT_COMMAND": "history -a",
+		"CHROMIUM_USER_DATA_DIR_GOOGLE": "${localWorkspaceFolder}/chromium_data/google",
+		"CHROMIUM_USER_DATA_DIR_MATSUI": "${localWorkspaceFolder}/chromium_data/matsui",
+		"ZAIM_ACCESS_TOKEN_FILE": "${localWorkspaceFolder}/zaim-tokens.json",
+		"ZAIM_TOTAL_AMOUNT_FILE": "${localWorkspaceFolder}/zaim-total-amount.json"
 	},
 
 	// Configure tool-specific properties.
