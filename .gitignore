@@ -150,12 +150,8 @@ vite.config.ts.timestamp-*
 # Command History
 .devcontainer/.bash_history
 
-# Chromium data
-chromium_data/*
-!chromium_data/.gitkeep
-
-# Zaim Token
-zaim-tokens.json
-
-# Zaim Total Amount Data
-zaim-total-amount.json
+# Application data
+appdata/chromium/*
+!appdata/chromium/.gitkeep
+appdata/zaim/*
+!appdata/zaim/zaim-total-amount.example.json

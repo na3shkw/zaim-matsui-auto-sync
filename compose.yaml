@@ -22,7 +22,7 @@ services:
         source: chromium-data
         target: /home/appuser/.config/appdata/chromium
       - type: bind
-        source: ./zaim_data
+        source: ./appdata/zaim
         target: /home/appuser/.config/appdata/zaim
         consistency: consistent
     network_mode: "host"

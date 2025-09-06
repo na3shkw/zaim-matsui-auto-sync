@@ -45,7 +45,7 @@ docker compose run --rm -e APP_COMMAND='zaim-cli' -e APP_ARGS='auth setup-token'
 
 ### 総額記録ファイルを作成する
 
-`zaim_data/zaim-total-amount.json` ファイルを下記の内容で保存する。
+`appdata/zaim/zaim-total-amount.json` ファイルを下記の内容で保存する。
 
 ```jsonc
 [
@@ -79,13 +79,13 @@ docker compose run --rm -e APP_COMMAND='sync-matsui-zaim' -e APP_ARGS='--dry-run
 
 1. 下記のコマンドで Chromium を起動する。
     ```bash
-    ~/.cache/ms-playwright/chromium-1181/chrome-linux/chrome --no-sandbox --user-data-dir=./chromium_data/google https://www.google.com
+    ~/.cache/ms-playwright/chromium-1181/chrome-linux/chrome --no-sandbox --user-data-dir=./appdata/chromium/google https://www.google.com
     ```
 2. 手動操作で Google にログインする。
 3. ログイン後、https://messages.google.com/web/ に遷移してデバイスのペア設定を行う。
 4. Chromium を閉じる。
 5. 下記のコマンドで Playwright 経由で Chromium を起動する。
     ```bash
-    npx playwright cr --user-data-dir=./chromium_data/google https://messages.google.com/web/
+    npx playwright cr --user-data-dir=./appdata/chromium/google https://messages.google.com/web/
     ```
 6. メッセージ内容が表示されることを確認する。

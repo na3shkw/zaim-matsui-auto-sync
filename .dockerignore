@@ -8,8 +8,7 @@
 .serena
 .vscode
 *.md
-chromium_data
+appdata
 dist
 LICENSE
 node_modules
-zaim_data
