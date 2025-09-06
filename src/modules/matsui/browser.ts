@@ -10,6 +10,8 @@ import { chromium } from "playwright";
 export async function openBrowser(userDataDir: string, headless: boolean = true) {
   const browserContext = await chromium.launchPersistentContext(userDataDir, {
     headless,
+    // ヘッドレスの場合はChromeの新しいヘッドレスモードを使うためにchromiumを指定する
+    channel: headless ? "chromium" : "chrome",
     args: [
       // headlessモードで起動した際のクラッシュを回避するため
       "--single-process",
