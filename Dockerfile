@@ -1,14 +1,29 @@
 # syntax=docker/dockerfile:1
-FROM node:22-bookworm AS builder
+FROM node:22-bookworm-slim AS dev-dependencies
 
 WORKDIR /app
 
+COPY package.json package-lock.json ./
+RUN npm ci --include=dev --ignore-scripts
+
+FROM node:22-bookworm-slim AS prod-dependencies
+
+WORKDIR /app
+
+COPY package.json package-lock.json ./
+RUN npm ci --only=production --ignore-scripts
+
+FROM node:22-bookworm-slim AS builder
+
+WORKDIR /app
+
+COPY --from=dev-dependencies /app/node_modules ./node_modules
 COPY package.json package-lock.json tsconfig.json ./
 COPY src ./src
 
-RUN npm install && npm run build
+RUN npm run build
 
-FROM node:22-bookworm
+FROM node:22-bookworm-slim
 
 WORKDIR /app
 
@@ -35,6 +50,7 @@ RUN if getent passwd $UID; then deluser $(getent passwd $UID | cut -d: -f1); fi 
     echo 'appuser ALL=(ALL) NOPASSWD: ALL' >> /etc/sudoers.d/appuser && \
     chmod 0440 /etc/sudoers.d/appuser
 
+COPY --from=prod-dependencies /app/node_modules ./node_modules
 COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/package*.json ./
 
@@ -42,7 +58,6 @@ USER appuser
 
 RUN sudo chown -R appuser:appuser . && \
     sudo chown -R appuser:appuser /home/appuser && \
-    npm install --production && \
     npx playwright install --with-deps chromium
 
 COPY --chmod=755 entrypoint.sh /
