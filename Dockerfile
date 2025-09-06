@@ -1,27 +1,13 @@
 # syntax=docker/dockerfile:1
-FROM node:22-bookworm-slim AS dev-dependencies
-
-WORKDIR /app
-
-COPY package.json package-lock.json ./
-RUN npm ci --include=dev --ignore-scripts
-
-FROM node:22-bookworm-slim AS prod-dependencies
-
-WORKDIR /app
-
-COPY package.json package-lock.json ./
-RUN npm ci --only=production --ignore-scripts
-
 FROM node:22-bookworm-slim AS builder
 
 WORKDIR /app
 
-COPY --from=dev-dependencies /app/node_modules ./node_modules
 COPY package.json package-lock.json tsconfig.json ./
 COPY src ./src
 
-RUN npm run build
+RUN npm ci --include=dev --ignore-scripts && \
+    npm run build
 
 FROM node:22-bookworm-slim
 
@@ -48,17 +34,24 @@ RUN if getent passwd $UID; then deluser $(getent passwd $UID | cut -d: -f1); fi 
     useradd -u $UID -g $GID -m appuser && \
     mkdir -p /etc/sudoers.d && \
     echo 'appuser ALL=(ALL) NOPASSWD: ALL' >> /etc/sudoers.d/appuser && \
-    chmod 0440 /etc/sudoers.d/appuser
-
-COPY --from=prod-dependencies /app/node_modules ./node_modules
-COPY --from=builder /app/dist ./dist
-COPY --from=builder /app/package*.json ./
-
+    chmod 0440 /etc/sudoers.d/appuser && \
+    chown -R appuser:appuser .
+    
 USER appuser
 
-RUN sudo chown -R appuser:appuser . && \
-    sudo chown -R appuser:appuser /home/appuser && \
-    npx playwright install --with-deps chromium
+COPY --from=builder --chown=appuser:appuser /app/dist ./dist
+COPY --from=builder --chown=appuser:appuser /app/package*.json ./
+
+RUN npm ci --omit=dev --ignore-scripts && \
+    npx playwright install --with-deps --no-shell chromium && \
+    npm cache clean --force && \
+    sudo npm uninstall -g npm && \
+    sudo find /usr/local/bin -type l -name "yarn*" -exec unlink {} \; && \
+    sudo rm -rf \
+        /opt/yarn-* \
+        /tmp/* \
+        /home/appuser/.cache/ms-playwright/ffmpeg* \
+        /home/appuser/.npm/_logs/*
 
 COPY --chmod=755 entrypoint.sh /
 
