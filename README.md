@@ -18,6 +18,11 @@ cron などを利用して定期実行することを想定しています。
 
 ## 事前セットアップ
 
+### `.env` ファイルの作成
+
+`.env.example` をコピーして `.env` ファイルを作成し、各項目の内容を設定する。
+`ZAIM_MATSUI_ACCOUNT_ID` と `ZAIM_MATSUI_INCOME_CATEGORY_ID` の設定は後で行うため空のままでよい。
+
 ### Google へのログイン
 
 Google メッセージへのアクセスをスムーズに行うため、事前に Chromium でログインとデバイスのペア設定を行う。
@@ -43,9 +48,27 @@ Google メッセージへのアクセスをスムーズに行うため、事前�
 docker compose run --rm -e APP_COMMAND='zaim-cli' -e APP_ARGS='auth setup-token' app
 ```
 
+### 同期先 Zaim 口座とカテゴリを `.env` に設定する
+
+#### `ZAIM_MATSUI_ACCOUNT_ID` の設定
+
+下記コマンドを実行して口座 ID 一覧を取得し、記録先の口座 ID を `ZAIM_MATSUI_ACCOUNT_ID` の値として設定する。
+
+```bash
+docker compose run --rm -e APP_COMMAND='zaim-cli' -e APP_ARGS='account list' app
+```
+
+#### `ZAIM_MATSUI_INCOME_CATEGORY_ID` の設定
+
+下記コマンドを実行して収入カテゴリ ID 一覧を取得し、記録に利用するカテゴリ ID を `ZAIM_MATSUI_INCOME_CATEGORY_ID` の値として設定する。
+
+```bash
+docker compose run --rm -e APP_COMMAND='zaim-cli' -e APP_ARGS='category list --mode income' app
+```
+
 ### 総額記録ファイルを作成する
 
-`appdata/zaim/zaim-total-amount.json` ファイルを下記の内容で保存する。
+`appdata/zaim/zaim-total-amount.example.json` ファイルをコピーして `appdata/zaim/zaim-total-amount.json` を作成し、内容を適宜編集して保存する。
 
 ```jsonc
 [
