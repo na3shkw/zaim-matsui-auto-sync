@@ -29,6 +29,7 @@ class LoggerManager {
         options: {
           enablePipelining: false,
           destination: 1,
+          newline: true,
         },
       };
     } else {
