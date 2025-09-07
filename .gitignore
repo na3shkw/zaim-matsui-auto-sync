@@ -155,3 +155,6 @@ appdata/chromium/*
 !appdata/chromium/.gitkeep
 appdata/zaim/*
 !appdata/zaim/zaim-total-amount.example.json
+
+# Docker Compose override file
+compose.override.yaml
