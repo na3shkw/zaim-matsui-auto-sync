@@ -1,10 +1,10 @@
 import pino from "pino";
 
-export type LogTransport = "pretty" | "syslog";
+export type LogTransport = "default" | "pretty";
 
 class LoggerManager {
   private static instance: pino.Logger;
-  private static transport: LogTransport = "pretty";
+  private static transport: LogTransport = "default";
 
   static configure(transport: LogTransport) {
     this.transport = transport;
@@ -23,16 +23,7 @@ class LoggerManager {
       level: process.env.LOG_LEVEL ?? "info",
     };
 
-    if (transport === "syslog") {
-      pinoOptions.transport = {
-        target: "pino-syslog",
-        options: {
-          enablePipelining: false,
-          destination: 1,
-          newline: true,
-        },
-      };
-    } else {
+    if (transport === "pretty") {
       pinoOptions.timestamp = pino.stdTimeFunctions.isoTime;
       pinoOptions.transport = {
         target: "pino-pretty",

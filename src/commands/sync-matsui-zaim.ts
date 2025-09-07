@@ -22,9 +22,7 @@ program
   .option("--dry-run", "ドライラン（Zaimへの記録を行わない）", false)
   .action(async (options) => {
     try {
-      if (!options.prettyLog) {
-        configureLogger("syslog");
-      }
+      configureLogger(options.prettyLog ? "pretty" : "default");
       const { dryRun } = options;
 
       if (!ZAIM_MATSUI_INCOME_CATEGORY_ID || !ZAIM_MATSUI_ACCOUNT_ID || !ZAIM_TOTAL_AMOUNT_FILE) {
