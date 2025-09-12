@@ -155,8 +155,8 @@ async function login(page: Page): Promise<void> {
  */
 async function getNisaPositionData(page: Page): Promise<NisaPosition> {
   await page.goto(MatsuiPage.nisa);
-  // 残高読み込みを待機する
-  await page.waitForSelector(".loadmask", { state: "detached" });
+  // 残高の読み込みが完了する（=更新日時の日付が設定される）まで待機する
+  await page.locator(".update-date", { hasText: /\d{4}\/\d{2}\/\d{2}/ }).waitFor();
   const trs = await page.locator("table[aria-describedby='NISA保有残高'] tr").all();
   const getRowData = async (tr: playwright.Locator) =>
     (await tr.allInnerTexts()).join("").split(/\s+/);
