@@ -3,6 +3,7 @@ import path from "path";
 import type { BrowserContext, Page } from "playwright";
 import playwright from "playwright";
 import { logger } from "../logger.js";
+import { parseNumber } from "../utils.js";
 import { getAuthenticationCode } from "./auth.js";
 import { openBrowser } from "./browser.js";
 import { MatsuiPage } from "./page.js";
@@ -14,17 +15,18 @@ interface MatsuiScraper {
   nisaTotalMarketValue: number;
 }
 
-interface NisaPositionItem {
-  時価評価額: number | undefined;
+interface PositionItem {
+  評価額: number | undefined;
   評価損益: number | undefined;
+  /**
+   * 損益率 (%)
+   */
+  損益率: number | undefined;
 }
 
-interface NisaPosition {
-  合計: NisaPositionItem;
-  "投資信託（NISA）": NisaPositionItem;
-  "投資信託（積立NISA）": NisaPositionItem;
-  "日本株（NISA）": NisaPositionItem;
-  "米国株（NISA）": NisaPositionItem;
+interface Position {
+  details: { [key: string]: PositionItem };
+  total: PositionItem;
 }
 
 const { CHROMIUM_USER_DATA_DIR_MATSUI, MATSUI_LOGIN_ID, MATSUI_PASSWORD, HEADLESS } = process.env;
@@ -151,45 +153,54 @@ async function login(page: Page): Promise<void> {
  * 資産評価額を取得する
  *
  * @param page PlaywrightのPageオブジェクト
- * @returns {Promise<NisaPosition>} 資産評価額
+ * @returns {Promise<Position>} 資産評価額
  */
-async function getNisaPositionData(page: Page): Promise<NisaPosition> {
-  await page.goto(MatsuiPage.nisa);
-  // 残高の読み込みが完了する（=更新日時の日付が設定される）まで待機する
-  await page.locator(".update-date", { hasText: /\d{4}\/\d{2}\/\d{2}/ }).waitFor();
-  const trs = await page.locator("table[aria-describedby='NISA保有残高'] tr").all();
+async function getPositionData(page: Page): Promise<Position> {
+  await page.goto(MatsuiPage.position);
+  // メインのコンテナが表示され、残高の読み込みが完了する（「※該当するデータがありません。」の要素が消える）まで待機する
+  await page.locator("#currentPortfolioInquiry").waitFor({ state: "visible", timeout: 30000 });
+  await page
+    .locator("#currentPortfolioInquiry .noRecord")
+    .waitFor({ state: "detached", timeout: 30000 });
+  // テーブルデータのパース
+  const trs = await page
+    .locator("#currentPortfolioInquiry h4", { hasText: "全保有銘柄" })
+    .locator("+ table tr")
+    .all();
   const getRowData = async (tr: playwright.Locator) =>
-    (await tr.allInnerTexts()).join("").split(/\s+/);
-  const [head, ...body] = await Promise.all(trs.map(getRowData));
-
-  if (!head) {
-    throw new Error("表のヘッダが空です。");
+    (await tr.allInnerTexts())
+      // 同じセルに表示されている評価損益と損益率を分離するため、正規表現で括弧を削除してから分割する
+      .map((text) => text.replace(/\s[(|)]\s/g, "\n"))
+      .join("")
+      .split(/\s+/);
+  const [_, ...body] = await Promise.all(trs.map(getRowData));
+  const totalRow = body[body.length - 1];
+  if (!totalRow || totalRow[0] !== "合計") {
+    throw new Error("合計行を取得できませんでした。");
   }
-  const nisaPositionData: NisaPosition = Object.fromEntries(
-    body.map((row) => [
-      row[0],
-      Object.fromEntries(
-        head.slice(1).map((key, index) => {
-          const rawValue = row[index + 1];
-          let value: number | undefined;
-          switch (rawValue) {
-            case "-":
-              value = 0;
-              break;
-            default:
-              // カンマを削除して数値にパースする（パースできない文字列が入った場合はundefinedになる）
-              value = parseInt(String(rawValue).replace(/,/g, ""), 10) || undefined;
-          }
-          return [key, value];
-        })
-      ),
-    ])
-  );
-  return nisaPositionData;
+
+  const positionData: Position = {
+    details: Object.fromEntries(
+      body.slice(0, -1).map((row) => [
+        row[0],
+        {
+          評価額: row[1] ? parseNumber(row[1]) : undefined,
+          評価損益: row[2] ? parseNumber(row[2]) : undefined,
+          損益率: row[3] ? parseNumber(row[3]) : undefined,
+        },
+      ])
+    ),
+    total: {
+      評価額: totalRow[1] ? parseNumber(totalRow[1]) : undefined,
+      評価損益: totalRow[2] ? parseNumber(totalRow[2]) : undefined,
+      損益率: totalRow[3] ? parseNumber(totalRow[3]) : undefined,
+    },
+  };
+  return positionData;
 }
 
 /**
- * 松井証券のNISA口座から資産評価額を取得する
+ * 松井証券の残高情報から資産評価額を取得する
  * @returns {Promise<MatsuiScraper>} 資産評価額
  */
 export async function scrapeMatsui(): Promise<MatsuiScraper> {
@@ -224,11 +235,11 @@ export async function scrapeMatsui(): Promise<MatsuiScraper> {
     }
 
     logger.info("NISA保有残高を取得します。");
-    const nisaPositionData = await getNisaPositionData(page);
-    logger.debug(nisaPositionData);
+    const positionData = await getPositionData(page);
+    logger.debug(positionData);
     logger.info("NISA保有残高の取得が完了しました。");
 
-    const nisaTotalMarketValue = nisaPositionData["合計"]["時価評価額"];
+    const nisaTotalMarketValue = positionData.details["NISA口座(積立)"]?.評価額;
     if (typeof nisaTotalMarketValue === "undefined") {
       throw new Error("パースされた値が不正です。");
     }
