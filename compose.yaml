@@ -12,6 +12,7 @@ services:
       CHROMIUM_USER_DATA_DIR_MATSUI: /home/appuser/.config/appdata/chromium/matsui
       ZAIM_ACCESS_TOKEN_FILE: /home/appuser/.config/appdata/zaim/zaim-tokens.json
       ZAIM_TOTAL_AMOUNT_FILE: /home/appuser/.config/appdata/zaim/zaim-total-amount.json
+      CONFIG_FILE: /home/appuser/.config/appdata/config.json
     env_file:
       - .env
     security_opt:
@@ -25,6 +26,11 @@ services:
         source: ./appdata/zaim
         target: /home/appuser/.config/appdata/zaim
         consistency: consistent
+      - type: bind
+        source: ./config.json
+        target: /home/appuser/.config/appdata/config.json
+        consistency: consistent
+        read_only: true
     network_mode: "host"
     init: true
     ipc: "host"

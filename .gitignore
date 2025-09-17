@@ -158,3 +158,6 @@ appdata/zaim/*
 
 # Docker Compose override file
 compose.override.yaml
+
+# Application configuration
+config.json
