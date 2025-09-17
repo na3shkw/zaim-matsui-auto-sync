@@ -8,13 +8,6 @@ import { getAuthenticationCode } from "./auth.js";
 import { openBrowser } from "./browser.js";
 import { MatsuiPage } from "./page.js";
 
-interface MatsuiScraper {
-  /**
-   * NISA時価評価額の合計
-   */
-  nisaTotalMarketValue: number;
-}
-
 interface PositionItem {
   評価額: number | undefined;
   評価損益: number | undefined;
@@ -24,8 +17,12 @@ interface PositionItem {
   損益率: number | undefined;
 }
 
+interface PositionDetails {
+  [key: string]: PositionItem;
+}
+
 interface Position {
-  details: { [key: string]: PositionItem };
+  details: PositionDetails;
   total: PositionItem;
 }
 
@@ -201,9 +198,9 @@ async function getPositionData(page: Page): Promise<Position> {
 
 /**
  * 松井証券の残高情報から資産評価額を取得する
- * @returns {Promise<MatsuiScraper>} 資産評価額
+ * @returns 資産評価額
  */
-export async function scrapeMatsui(): Promise<MatsuiScraper> {
+export async function scrapeMatsui(): Promise<PositionDetails> {
   if (!CHROMIUM_USER_DATA_DIR_MATSUI) {
     throw new Error("環境変数 CHROMIUM_USER_DATA_DIR_MATSUI が設定されていません。");
   }
@@ -234,17 +231,12 @@ export async function scrapeMatsui(): Promise<MatsuiScraper> {
       logger.info("既存のセッションを使用します。");
     }
 
-    logger.info("NISA保有残高を取得します。");
+    logger.info("資産評価額を取得します。");
     const positionData = await getPositionData(page);
     logger.debug(positionData);
-    logger.info("NISA保有残高の取得が完了しました。");
+    logger.info("資産評価額の取得が完了しました。");
 
-    const nisaTotalMarketValue = positionData.details["NISA口座(積立)"]?.評価額;
-    if (typeof nisaTotalMarketValue === "undefined") {
-      throw new Error("パースされた値が不正です。");
-    }
-
-    return { nisaTotalMarketValue };
+    return positionData.details;
   } catch (error) {
     logger.error(error, "松井証券のスクレイピング中にエラーが発生しました。");
     throw error;

@@ -34,10 +34,8 @@ program
         throw new Error(`環境変数 ${vars.join(" または ")} が設定されていません。`);
       }
 
-      // NISA資産状況を取得
-      logger.info("NISA資産状況を取得します。");
-      const nisaData = await scrapeMatsui();
-      logger.info("NISA資産状況の取得が完了しました。");
+      // 資産評価額を取得
+      const positionData = await scrapeMatsui();
 
       // 前回記録時点の総額との差分を取得
       logger.info("総額記録ファイルを取得します。");
@@ -65,7 +63,11 @@ program
       }
       logger.info("総額を取得しました。");
 
-      const amount = nisaData.nisaTotalMarketValue - nisaLastAmountValue;
+      const currentNisaTotal = positionData["NISA口座(積立)"]?.評価額;
+      if (typeof currentNisaTotal === "undefined") {
+        throw new Error("NISA口座(積立)の評価額を取得できませんでした。");
+      }
+      const amount = currentNisaTotal - nisaLastAmountValue;
       logger.info(`記録する金額は ${amount} 円です。`);
 
       if (dryRun) {
