@@ -2,12 +2,12 @@
 import { Command } from "commander";
 import dayjs from "dayjs";
 import fs from "fs";
+import { loadConfig } from "../modules/config.js";
 import { configureLogger, logger, scrapeMatsui, Zaim } from "../modules/index.js";
 
-const { ZAIM_MATSUI_INCOME_CATEGORY_ID, ZAIM_MATSUI_ACCOUNT_ID, ZAIM_TOTAL_AMOUNT_FILE } =
-  process.env;
+const { ZAIM_TOTAL_AMOUNT_FILE } = process.env;
 
-interface lastTotalAmount {
+interface LastTotalAmount {
   accountId: number;
   amount: number;
   updatedAt: string;
@@ -25,13 +25,14 @@ program
       configureLogger(options.prettyLog ? "pretty" : "default");
       const { dryRun } = options;
 
-      if (!ZAIM_MATSUI_INCOME_CATEGORY_ID || !ZAIM_MATSUI_ACCOUNT_ID || !ZAIM_TOTAL_AMOUNT_FILE) {
-        const vars = [
-          "ZAIM_MATSUI_INCOME_CATEGORY_ID",
-          "ZAIM_MATSUI_ACCOUNT_ID",
-          "ZAIM_TOTAL_AMOUNT_FILE",
-        ];
-        throw new Error(`環境変数 ${vars.join(" または ")} が設定されていません。`);
+      const config = loadConfig();
+      const accounts = config.accounts.filter((acc) => acc.enabled);
+      if (accounts.length === 0) {
+        throw new Error("有効なアカウントが1つもありません。");
+      }
+
+      if (!ZAIM_TOTAL_AMOUNT_FILE) {
+        throw new Error(`環境変数 ZAIM_TOTAL_AMOUNT_FILE が設定されていません。`);
       }
 
       // 資産評価額を取得
@@ -40,66 +41,72 @@ program
       // 前回記録時点の総額との差分を取得
       logger.info("総額記録ファイルを取得します。");
       const isAmountFileExists = fs.existsSync(ZAIM_TOTAL_AMOUNT_FILE);
-      let lastTotalAmount: lastTotalAmount[] = [];
-      let nisaLastAmount: lastTotalAmount | undefined = undefined;
-      let nisaLastAmountValue: number | undefined = undefined;
-      const accountId = parseInt(ZAIM_MATSUI_ACCOUNT_ID, 10);
+      let lastTotalAmountList: LastTotalAmount[] = [];
       if (isAmountFileExists) {
-        lastTotalAmount = JSON.parse(
+        lastTotalAmountList = JSON.parse(
           fs.readFileSync(ZAIM_TOTAL_AMOUNT_FILE, { encoding: "utf-8" })
         );
-        if (!lastTotalAmount) {
+        if (!lastTotalAmountList) {
           throw new Error("総額記録ファイルの中身が空です。");
         }
-        nisaLastAmount = lastTotalAmount.find((item) => item.accountId === accountId);
-        nisaLastAmountValue = nisaLastAmount?.amount;
       } else {
         // 初回実行時のみ通る想定
-        logger.info("総額記録ファイルがありません。現時点の総額を0として続行します。");
-        nisaLastAmountValue = 0;
+        logger.info("総額記録ファイルがありません。");
       }
-      if (typeof nisaLastAmountValue === "undefined") {
-        throw new Error("総額を取得できませんでした。");
-      }
-      logger.info("総額を取得しました。");
+      logger.info("前回同期実行後の総額を取得しました。");
 
-      const currentNisaTotal = positionData["NISA口座(積立)"]?.評価額;
-      if (typeof currentNisaTotal === "undefined") {
-        throw new Error("NISA口座(積立)の評価額を取得できませんでした。");
-      }
-      const amount = currentNisaTotal - nisaLastAmountValue;
-      logger.info(`記録する金額は ${amount} 円です。`);
+      // 口座ごとにZaimに記録する
+      // 松井証券の異なる口座の残高を同じZaimの口座に記録することは想定していないため注意
+      for (const account of accounts) {
+        const currentTotalAmount = positionData[account.matsui.accountName]?.評価額;
+        if (typeof currentTotalAmount === "undefined") {
+          throw new Error(`${account.name}の評価額を取得できませんでした`);
+        }
 
-      if (dryRun) {
-        logger.info("ドライランモードのためZaimへの記録は行わず終了します。");
-        return;
-      }
+        let lastTotalAmountItem = lastTotalAmountList.find(
+          (item) => item.accountId === account.zaim.accountId
+        );
+        if (typeof lastTotalAmountItem === "undefined") {
+          logger.info(
+            `${account.name}の前回総額データがありません。初回実行時は前回総額を0として続行します。`
+          );
+          lastTotalAmountItem = {
+            amount: 0,
+            accountId: account.zaim.accountId,
+            updatedAt: dayjs().format(),
+          };
+          lastTotalAmountList.push(lastTotalAmountItem);
+        }
 
-      // Zaim APIにデータを送信
-      const zaim = new Zaim();
-      await zaim.registerIncomeJournalEntry({
-        categoryId: parseInt(ZAIM_MATSUI_INCOME_CATEGORY_ID, 10),
-        amount,
-        date: dayjs(),
-        toAccountId: accountId,
-        comment: "自動同期",
-      });
-      logger.info("Zaimへの記録が完了しました。");
+        const amount = currentTotalAmount - lastTotalAmountItem.amount;
+        logger.info(`${account.name}の記録する金額は ${amount} 円です。`);
+
+        if (dryRun) {
+          logger.info("ドライランモードのためZaimへの記録は行いません。");
+          return;
+        }
+        // Zaim APIにデータを送信
+        const zaim = new Zaim();
+        await zaim.registerIncomeJournalEntry({
+          categoryId: account.zaim.categoryId,
+          amount,
+          date: dayjs(),
+          toAccountId: account.zaim.accountId,
+          comment: "自動同期",
+        });
+        logger.info(`${account.name}のZaimへの記録が完了しました。`);
+
+        // 総額データに反映
+        lastTotalAmountItem.amount = currentTotalAmount;
+        lastTotalAmountItem.updatedAt = dayjs().format();
+      }
 
       // 総額データを更新
-      logger.info("総額データを更新します。");
-      const updatedAt = dayjs().format();
-      if (nisaLastAmount) {
-        nisaLastAmount.amount += amount;
-        nisaLastAmount.updatedAt = updatedAt;
-      } else {
-        lastTotalAmount?.push({
-          amount,
-          accountId,
-          updatedAt,
-        });
+      if (dryRun) {
+        logger.info("ドライランモードのため総額データの更新は行いません。");
+        return;
       }
-      fs.writeFileSync(ZAIM_TOTAL_AMOUNT_FILE, JSON.stringify(lastTotalAmount, null, 2), {
+      fs.writeFileSync(ZAIM_TOTAL_AMOUNT_FILE, JSON.stringify(lastTotalAmountList, null, 2), {
         encoding: "utf-8",
       });
       logger.info("総額データを更新しました。");
