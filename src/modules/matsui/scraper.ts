@@ -150,7 +150,7 @@ async function login(page: Page): Promise<void> {
  * 資産評価額を取得する
  *
  * @param page PlaywrightのPageオブジェクト
- * @returns {Promise<Position>} 資産評価額
+ * @returns 資産評価額
  */
 async function getPositionData(page: Page): Promise<Position> {
   await page.goto(MatsuiPage.position);
