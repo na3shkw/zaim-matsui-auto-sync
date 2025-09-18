@@ -21,9 +21,20 @@ export const AccountConfigSchema = z.object({
   zaim: ZaimConfigSchema,
 });
 
-export const AppConfigSchema = z.object({
-  accounts: z.array(AccountConfigSchema),
-});
+export const AppConfigSchema = z
+  .object({
+    accounts: z.array(AccountConfigSchema),
+  })
+  .refine(
+    (data) => {
+      const accountIds = data.accounts.map((account) => account.zaim.accountId);
+      return new Set(accountIds).size === accountIds.length;
+    },
+    {
+      // 松井証券の異なる口座の残高を同じZaimの口座に記録することは許可しない
+      message: "Duplicate zaim.accountId values are not allowed",
+    }
+  );
 
 // 型定義（Zodスキーマから自動生成）
 export type MatsuiConfig = z.infer<typeof MatsuiConfigSchema>;
