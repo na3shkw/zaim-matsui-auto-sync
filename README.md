@@ -21,7 +21,6 @@ cron などを利用して定期実行することを想定しています。
 ### `.env` ファイルの作成
 
 `.env.example` をコピーして `.env` ファイルを作成し、各項目の内容を設定する。
-`ZAIM_MATSUI_ACCOUNT_ID` と `ZAIM_MATSUI_INCOME_CATEGORY_ID` の設定は後で行うため空のままでよい。
 
 ### Google へのログイン
 
@@ -48,19 +47,44 @@ Google メッセージへのアクセスをスムーズに行うため、事前�
 docker compose run --rm -e APP_COMMAND='zaim-cli' -e APP_ARGS='auth setup-token' app
 ```
 
-### 同期先 Zaim 口座とカテゴリを `.env` に設定する
+### `config.json` ファイルの作成
 
-#### `ZAIM_MATSUI_ACCOUNT_ID` の設定
+`config.example.json` をコピーして `config.json` ファイルを作成し、各項目の内容を設定する。
 
-下記コマンドを実行して口座 ID 一覧を取得し、記録先の口座 ID を `ZAIM_MATSUI_ACCOUNT_ID` の値として設定する。
+```jsonc
+{
+  "name": "NISA",   // 任意の名前
+  "enabled": true,  // 無効化したい場合は false にする
+  "matsui": {
+    "type": "fund", // "fund" 固定
+    "accountName": "NISA口座(積立)" // 下記 (A) を参照
+  },
+  "zaim": {
+    "accountId": "12345678",      // 下記 (B) を参照
+    "categoryId": "12345678"      // 下記 (C) を参照
+  }
+}
+```
+
+#### (A) `matsui.accountName`
+
+この値は同期対象の口座名を指定するもの。
+松井証券の投資信託残高照会ページにアクセスし、全保有銘柄の表にある「口座名」の値を設定する。
+
+#### (B) `zaim.accountId`
+
+この値は同期先の Zaim の口座 ID を指定するもの。
+下記コマンドを実行して口座 ID 一覧を取得し、記録先の口座 ID を設定する。
+異なる松井証券の口座の同期先として Zaim の同じ口座 ID は設定できないことに注意する。
 
 ```bash
 docker compose run --rm -e APP_COMMAND='zaim-cli' -e APP_ARGS='account list' app
 ```
 
-#### `ZAIM_MATSUI_INCOME_CATEGORY_ID` の設定
+#### (C) `zaim.categoryId`
 
-下記コマンドを実行して収入カテゴリ ID 一覧を取得し、記録に利用するカテゴリ ID を `ZAIM_MATSUI_INCOME_CATEGORY_ID` の値として設定する。
+この値は同期先の Zaim の収入カテゴリ ID を指定するもの。
+下記コマンドを実行して収入カテゴリ ID 一覧を取得し、記録に利用するカテゴリ ID を設定する。
 
 ```bash
 docker compose run --rm -e APP_COMMAND='zaim-cli' -e APP_ARGS='category list --mode income' app
@@ -73,10 +97,9 @@ docker compose run --rm -e APP_COMMAND='zaim-cli' -e APP_ARGS='category list --m
 ```jsonc
 [
   {
-    // 記録開始時点での Zaim の口座残高
-    "amount": 0,
-    // .env の ZAIM_MATSUI_ACCOUNT_ID と同じ値
-    "accountId": 12345678,
+    
+    "amount": 0,  // 記録開始時点での Zaim の口座残高
+    "accountId": 12345678,  // config.json の zaim.accountId と同じ値
     "updatedAt": "2025-09-01T12:34:56+09:00"
   }
 ]
