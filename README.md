@@ -1,5 +1,8 @@
 # Zaim-Matsui Auto Sync
 
+[![Test](https://github.com/na3shkw/zaim-matsui-auto-sync/actions/workflows/test.yml/badge.svg)](https://github.com/na3shkw/zaim-matsui-auto-sync/actions/workflows/test.yml)
+[![CodeQL](https://github.com/na3shkw/zaim-matsui-auto-sync/actions/workflows/github-code-scanning/codeql/badge.svg)](https://github.com/na3shkw/zaim-matsui-auto-sync/actions/workflows/github-code-scanning/codeql)
+
 ## 概要
 
 松井証券の NISA 資産状況を Zaim に同期するコマンドラインアプリケーションです。
