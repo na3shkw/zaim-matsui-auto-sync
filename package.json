@@ -20,11 +20,14 @@
     "postbuild": "chmod +x dist/commands/sync-matsui-zaim.js dist/commands/zaim/index.js",
     "build:watch": "tsc --watch",
     "clean": "rm -rf dist",
+    "typecheck": "tsc --noEmit",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "test:ci": "vitest run --coverage.enabled true"
   },
   "devDependencies": {
     "@types/node": "^24.2.1",
+    "@vitest/coverage-v8": "^3.2.4",
     "pino-pretty": "^13.1.1",
     "tsx": "^4.20.3",
     "typescript": "^5.9.2",
