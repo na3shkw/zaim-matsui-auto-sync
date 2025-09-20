@@ -48,7 +48,8 @@
 				"Anthropic.claude-code",
 				"esbenp.prettier-vscode",
 				"google.gemini-cli-vscode-ide-companion",
-				"MermaidChart.vscode-mermaid-chart"
+				"MermaidChart.vscode-mermaid-chart",
+				"vitest.explorer"
 			]
 		}
 	},
