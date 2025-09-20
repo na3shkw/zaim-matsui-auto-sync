@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { parseNumber } from "../utils.js";
+import { parseNumber } from "./utils.js";
 
 describe("parseNumber", () => {
   it("数字の文字列を正しく数値に変換する", () => {

@@ -21,14 +21,14 @@ describe("loadConfig", () => {
   it("CONFIG_FILE環境変数が設定されていない場合、エラーを投げる", async () => {
     delete process.env.CONFIG_FILE;
 
-    const { loadConfig } = await import("../config.js");
+    const { loadConfig } = await import("./config.js");
     expect(() => loadConfig()).toThrow("環境変数 CONFIG_FILE が設定されていません。");
   });
 
   it("設定ファイルが存在しない場合、エラーを投げる", async () => {
     mockFs.existsSync.mockReturnValue(false);
 
-    const { loadConfig } = await import("../config.js");
+    const { loadConfig } = await import("./config.js");
     expect(() => loadConfig()).toThrow(`設定ファイルが存在しません: ${mockConfigPath}`);
   });
 
@@ -53,7 +53,7 @@ describe("loadConfig", () => {
     mockFs.existsSync.mockReturnValue(true);
     mockFs.readFileSync.mockReturnValue(JSON.stringify(validConfig));
 
-    const { loadConfig } = await import("../config.js");
+    const { loadConfig } = await import("./config.js");
     const result = loadConfig();
 
     expect(result).toEqual(validConfig);
@@ -65,7 +65,7 @@ describe("loadConfig", () => {
     mockFs.existsSync.mockReturnValue(true);
     mockFs.readFileSync.mockReturnValue("{ invalid json }");
 
-    const { loadConfig } = await import("../config.js");
+    const { loadConfig } = await import("./config.js");
     expect(() => loadConfig()).toThrow(`設定ファイルのJSON形式が不正です`);
   });
 
@@ -90,7 +90,7 @@ describe("loadConfig", () => {
     mockFs.existsSync.mockReturnValue(true);
     mockFs.readFileSync.mockReturnValue(JSON.stringify(invalidConfig));
 
-    const { loadConfig } = await import("../config.js");
+    const { loadConfig } = await import("./config.js");
     expect(() => loadConfig()).toThrow(`設定ファイルの形式が正しくありません`);
   });
 
@@ -100,7 +100,7 @@ describe("loadConfig", () => {
       throw new Error("Permission denied");
     });
 
-    const { loadConfig } = await import("../config.js");
+    const { loadConfig } = await import("./config.js");
     expect(() => loadConfig()).toThrow(`設定ファイルの読み込みに失敗しました`);
   });
 
@@ -137,7 +137,7 @@ describe("loadConfig", () => {
     mockFs.existsSync.mockReturnValue(true);
     mockFs.readFileSync.mockReturnValue(JSON.stringify(duplicateAccountIdConfig));
 
-    const { loadConfig } = await import("../config.js");
+    const { loadConfig } = await import("./config.js");
     expect(() => loadConfig()).toThrow("Duplicate zaim.accountId values are not allowed");
   });
 
@@ -174,7 +174,7 @@ describe("loadConfig", () => {
     mockFs.existsSync.mockReturnValue(true);
     mockFs.readFileSync.mockReturnValue(JSON.stringify(multiAccountConfig));
 
-    const { loadConfig } = await import("../config.js");
+    const { loadConfig } = await import("./config.js");
     const result = loadConfig();
 
     expect(result).toEqual(multiAccountConfig);
