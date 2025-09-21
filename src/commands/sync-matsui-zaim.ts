@@ -83,7 +83,7 @@ program
 
         if (dryRun) {
           logger.info("ドライランモードのためZaimへの記録は行いません。");
-          return;
+          continue;
         }
         // Zaim APIにデータを送信
         const zaim = new Zaim();
