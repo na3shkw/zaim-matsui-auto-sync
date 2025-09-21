@@ -20,7 +20,8 @@
 		"CHROMIUM_USER_DATA_DIR_GOOGLE": "/workspaces/zaim-matsui-auto-sync/appdata/chromium/google",
 		"CHROMIUM_USER_DATA_DIR_MATSUI": "/workspaces/zaim-matsui-auto-sync/appdata/chromium/matsui",
 		"ZAIM_ACCESS_TOKEN_FILE": "/workspaces/zaim-matsui-auto-sync/appdata/zaim/zaim-tokens.json",
-		"ZAIM_TOTAL_AMOUNT_FILE": "/workspaces/zaim-matsui-auto-sync/appdata/zaim/zaim-total-amount.json"
+		"ZAIM_TOTAL_AMOUNT_FILE": "/workspaces/zaim-matsui-auto-sync/appdata/zaim/zaim-total-amount.json",
+		"CONFIG_FILE": "/workspaces/zaim-matsui-auto-sync/config.json"
 	},
 
 	// Configure tool-specific properties.
@@ -47,7 +48,8 @@
 				"Anthropic.claude-code",
 				"esbenp.prettier-vscode",
 				"google.gemini-cli-vscode-ide-companion",
-				"MermaidChart.vscode-mermaid-chart"
+				"MermaidChart.vscode-mermaid-chart",
+				"vitest.explorer"
 			]
 		}
 	},

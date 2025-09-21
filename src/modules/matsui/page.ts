@@ -32,13 +32,10 @@ export class MatsuiPage {
   }
 
   /**
-   * 投資信託NISA資産状況のURL
+   * 投資信託残高照会のURL
    */
-  static get nisa(): string {
-    return this.getFullUrl(
-      this.MATSUI_FUND_BASE_URL,
-      "/ra/robo-advisor/page/main.html#!/nisa-position"
-    );
+  static get position(): string {
+    return this.getFullUrl(this.MATSUI_FUND_BASE_URL, "/ra/robo-advisor/page/main.html#!/position");
   }
 
   /**

@@ -1,0 +1,16 @@
+{
+  "accounts": [
+    {
+      "name": "NISA",
+      "enabled": true,
+      "matsui": {
+        "type": "fund",
+        "accountName": "NISA口座(積立)"
+      },
+      "zaim": {
+        "accountId": "12345678",
+        "categoryId": "12345678"
+      }
+    }
+  ]
+}
