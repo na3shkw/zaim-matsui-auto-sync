@@ -30,7 +30,6 @@ services:
         source: ./config.json
         target: /home/appuser/.config/appdata/config.json
         consistency: consistent
-        read_only: true
     network_mode: "host"
     init: true
     ipc: "host"
