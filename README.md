@@ -71,8 +71,8 @@ docker compose run --rm -e APP_COMMAND='zaim-cli' -e APP_ARGS='auth setup-token'
 
 #### (A) `matsui.accountName`
 
-この値は同期対象の口座名を指定するもの。
-松井証券の投資信託残高照会ページにアクセスし、全保有銘柄の表にある「口座名」の値を設定する。
+この値は同期対象の口座を指定するもの。
+松井証券の投資信託残高照会ページにアクセスし、全保有銘柄の表にある「口座区分」の値を設定する。
 
 #### (B) `zaim.accountId`
 
