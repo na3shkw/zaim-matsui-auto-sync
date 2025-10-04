@@ -1,11 +1,9 @@
-import fs from "fs";
-import path from "path";
 import type { BrowserContext, Page } from "playwright";
 import playwright from "playwright";
 import { logger } from "../logger.js";
 import { parseNumber } from "../utils.js";
 import { getAuthenticationCode } from "./auth.js";
-import { openBrowser } from "./browser.js";
+import { backupCookies, openBrowser, restoreCookies } from "./browser.js";
 import { MatsuiPage } from "./page.js";
 
 /**
@@ -52,40 +50,6 @@ interface Position {
 }
 
 const { CHROMIUM_USER_DATA_DIR_MATSUI, MATSUI_LOGIN_ID, MATSUI_PASSWORD, HEADLESS } = process.env;
-
-const COOKIES_FILE_PATH = path.join(CHROMIUM_USER_DATA_DIR_MATSUI ?? process.cwd(), "cookies.json");
-
-/**
- * Cookieをファイルにバックアップ
- *
- * @param page PlaywrightのPageオブジェクト
- */
-async function backupCookies(page: Page): Promise<void> {
-  try {
-    const cookies = await page.context().cookies();
-    fs.writeFileSync(COOKIES_FILE_PATH, JSON.stringify(cookies, null, 2));
-    logger.info(`Cookieを${COOKIES_FILE_PATH}にバックアップしました。`);
-  } catch (error) {
-    logger.error(error, "Cookieのバックアップ中にエラーが発生しました。");
-  }
-}
-
-/**
- * Cookieをファイルから復元
- *
- * @param browserContext PlaywrightのBrowserContextオブジェクト
- * @returns 復元したかどうか
- */
-async function restoreCookies(browserContext: BrowserContext): Promise<boolean> {
-  try {
-    const cookiesData = fs.readFileSync(COOKIES_FILE_PATH, "utf-8");
-    const cookies = JSON.parse(cookiesData);
-    await browserContext.addCookies(cookies);
-    return true;
-  } catch (error) {
-    return false;
-  }
-}
 
 /**
  * 投資信託の資産データをスクレイピングする戦略
@@ -161,7 +125,7 @@ class MutualFundStrategy implements AssetScrapingStrategy<Position> {
     }
 
     // ログイン成功後にCookieを保存
-    await backupCookies(page);
+    await backupCookies(page, CHROMIUM_USER_DATA_DIR_MATSUI!);
   }
 
   async scrapeAssets(page: Page): Promise<Position> {
@@ -284,9 +248,9 @@ export async function scrapeMatsui(): Promise<PositionDetails> {
     ));
 
     // Cookie復元を試行
-    const cookiesRestored = await restoreCookies(browserContext);
+    const cookiesRestored = await restoreCookies(browserContext, CHROMIUM_USER_DATA_DIR_MATSUI);
     if (cookiesRestored) {
-      logger.info("保存されたCookieを復元しました。");
+      logger.info("保存されているCookieを復元しました。");
     }
 
     logger.info("資産評価額を取得します。");
@@ -308,19 +272,24 @@ export async function scrapeMatsui(): Promise<PositionDetails> {
     logger.error(error, "松井証券のスクレイピング中にエラーが発生しました。");
     throw error;
   } finally {
-    try {
-      // Cookieを保存
-      if (page) {
-        await backupCookies(page);
+    // Cookieを保存
+    if (page) {
+      try {
+        await backupCookies(page, CHROMIUM_USER_DATA_DIR_MATSUI!);
+      } catch (error) {
+        logger.error(error, "スクレイピング後のCookie保存中にエラーが発生しました。");
       }
+    }
 
-      if (browserContext) {
+    // ブラウザクローズ
+    if (browserContext) {
+      try {
         logger.info("ブラウザコンテキストを閉じています。");
         await browserContext.close();
         logger.info("ブラウザコンテキストを閉じました。");
+      } catch (error) {
+        logger.error(error, "ブラウザコンテキストのクローズ中にエラーが発生しました。");
       }
-    } catch (error) {
-      logger.error(error, "ブラウザコンテキストのクローズ中にエラーが発生しました。");
     }
   }
 }
