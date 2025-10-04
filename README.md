@@ -100,7 +100,6 @@ docker compose run --rm -e APP_COMMAND='zaim-cli' -e APP_ARGS='category list --m
 ```jsonc
 [
   {
-    
     "amount": 0,  // 記録開始時点での Zaim の口座残高
     "accountId": 12345678,  // config.json の zaim.accountId と同じ値
     "updatedAt": "2025-09-01T12:34:56+09:00"
