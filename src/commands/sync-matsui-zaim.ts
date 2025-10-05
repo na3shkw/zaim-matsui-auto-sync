@@ -1,19 +1,13 @@
 #!/usr/bin/env node
 import { Command } from "commander";
 import dayjs from "dayjs";
-import fs from "fs";
 import { loadConfig } from "../modules/config.js";
 import { configureLogger, logger, MatsuiScraper, Zaim } from "../modules/index.js";
 import { StrategyFactory } from "../modules/matsui/strategies/index.js";
+import { TotalAmountRepository } from "../modules/sync/total-amount-repository.js";
 import type { Position, PositionDetails } from "../types/matsui.js";
 
 const { ZAIM_TOTAL_AMOUNT_FILE } = process.env;
-
-interface LastTotalAmount {
-  accountId: number;
-  amount: number;
-  updatedAt: string;
-}
 
 const program = new Command();
 
@@ -67,19 +61,8 @@ program
 
       // 前回記録時点の総額との差分を取得
       logger.info("総額記録ファイルを取得します。");
-      const isAmountFileExists = fs.existsSync(ZAIM_TOTAL_AMOUNT_FILE);
-      let lastTotalAmountList: LastTotalAmount[] = [];
-      if (isAmountFileExists) {
-        lastTotalAmountList = JSON.parse(
-          fs.readFileSync(ZAIM_TOTAL_AMOUNT_FILE, { encoding: "utf-8" })
-        );
-        if (!lastTotalAmountList) {
-          throw new Error("総額記録ファイルの中身が空です。");
-        }
-      } else {
-        // 初回実行時のみ通る想定
-        logger.info("総額記録ファイルがありません。");
-      }
+      const totalAmountRepo = new TotalAmountRepository(ZAIM_TOTAL_AMOUNT_FILE);
+      const lastTotalAmountList = totalAmountRepo.load();
       logger.info("前回同期実行後の総額を取得しました。");
 
       // 口座ごとにZaimに記録する
@@ -133,9 +116,7 @@ program
         logger.info("ドライランモードのため総額データの更新は行いません。");
         return;
       }
-      fs.writeFileSync(ZAIM_TOTAL_AMOUNT_FILE, JSON.stringify(lastTotalAmountList, null, 2), {
-        encoding: "utf-8",
-      });
+      totalAmountRepo.save(lastTotalAmountList);
       logger.info("総額データを更新しました。");
     } catch (error) {
       logger.error(error, "処理中にエラーが発生しました。");
