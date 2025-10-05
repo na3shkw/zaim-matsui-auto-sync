@@ -3,7 +3,9 @@ import { Command } from "commander";
 import dayjs from "dayjs";
 import fs from "fs";
 import { loadConfig } from "../modules/config.js";
-import { configureLogger, logger, scrapeMatsui, Zaim } from "../modules/index.js";
+import { configureLogger, logger, MatsuiScraper, Zaim } from "../modules/index.js";
+import { StrategyFactory } from "../modules/matsui/strategies/index.js";
+import type { Position, PositionDetails } from "../types/matsui.js";
 
 const { ZAIM_TOTAL_AMOUNT_FILE } = process.env;
 
@@ -36,7 +38,32 @@ program
       }
 
       // 資産評価額を取得
-      const positionData = await scrapeMatsui();
+      let positionData: PositionDetails | null = null;
+      let scraper: MatsuiScraper | null = null;
+      try {
+        // Strategyパターンを使用してスクレイピング実行
+        scraper = new MatsuiScraper();
+        await scraper.initialize();
+
+        logger.info("資産評価額を取得します。");
+
+        scraper.setStrategy(StrategyFactory.create("fund"));
+
+        // 認証処理を実行
+        await scraper.authenticate();
+
+        // データを取得
+        positionData = (await scraper.scrape<Position>()).details;
+        logger.debug(positionData);
+        logger.info("資産評価額の取得が完了しました。");
+      } catch (error) {
+        logger.error(error, "松井証券のスクレイピング中にエラーが発生しました。");
+        throw error;
+      } finally {
+        if (scraper) {
+          await scraper.close();
+        }
+      }
 
       // 前回記録時点の総額との差分を取得
       logger.info("総額記録ファイルを取得します。");
