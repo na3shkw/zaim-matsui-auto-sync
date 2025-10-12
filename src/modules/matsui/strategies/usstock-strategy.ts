@@ -18,6 +18,7 @@ export class UsStockStrategy implements AssetScrapingStrategy<UsStockAsset> {
       await page.goto(MatsuiPage.usStockMemberHome, { timeout: 10000 });
       // ログインページにリダイレクトされていないかチェック
       const url = page.url();
+      // TODO: メンテナンスページにリダイレクトされた場合の処理を実装
       return !url.includes("/login");
     } catch (error) {
       logger.error(error, "セッション有効性チェック中にエラーが発生しました。");
@@ -43,6 +44,12 @@ export class UsStockStrategy implements AssetScrapingStrategy<UsStockAsset> {
     const loginButton = page.locator("button").filter({ hasText: "ログイン" });
     await Promise.all([page.waitForURL("**", { timeout: 10000 }), loginButton.click()]);
     logger.info("ログインボタンをクリックしました。");
+
+    // メンテナンスページにリダイレクトされた場合
+    const currentUrl = page.url();
+    if (currentUrl.includes(MatsuiPage.tradeMente)) {
+      throw new Error("メンテナンス中のため同期を実行できません。");
+    }
 
     // 認証コードを入力
     const { authenticationCode } = await getAuthenticationCode();

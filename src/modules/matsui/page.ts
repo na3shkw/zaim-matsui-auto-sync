@@ -48,6 +48,13 @@ export class MatsuiPage {
   }
 
   /**
+   * お客様サイトメンテナンスページのURL
+   */
+  static get tradeMente(): string {
+    return this.getFullUrl(this.MATSUI_WWW_BASE_URL, "/nw/mente/trade_mainte.html");
+  }
+
+  /**
    * 米国株ログインURL
    */
   static get usStockLogin(): string {
