@@ -3,9 +3,12 @@ import { z } from "zod";
 
 const { CONFIG_FILE } = process.env;
 
+const StrategyTypeSchema = z.literal("fund");
+export type StrategyType = z.infer<typeof StrategyTypeSchema>;
+
 // Zodスキーマ定義
 export const MatsuiConfigSchema = z.object({
-  type: z.literal("fund"),
+  type: StrategyTypeSchema,
   accountName: z.string(),
 });
 
