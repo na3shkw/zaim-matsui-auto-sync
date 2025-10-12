@@ -87,13 +87,17 @@ export class FundStrategy implements AssetScrapingStrategy<Position> {
     await backupCookies(page, CHROMIUM_USER_DATA_DIR_MATSUI!);
   }
 
-  async scrapeAssets(page: Page): Promise<Position> {
+  async prepareTargetPage(page: Page): Promise<Page> {
     await page.goto(MatsuiPage.position);
     // メインのコンテナが表示され、残高の読み込みが完了する（「※該当するデータがありません。」の要素が消える）まで待機する
     await page.locator("#currentPortfolioInquiry").waitFor({ state: "visible", timeout: 30000 });
     await page
       .locator("#currentPortfolioInquiry .noRecord")
       .waitFor({ state: "detached", timeout: 30000 });
+    return page;
+  }
+
+  async scrapeAssets(page: Page): Promise<Position> {
     // テーブルデータのパース
     const trs = await page
       .locator("#currentPortfolioInquiry h4", { hasText: "全保有銘柄" })

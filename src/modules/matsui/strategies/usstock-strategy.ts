@@ -51,21 +51,24 @@ export class UsStockStrategy implements AssetScrapingStrategy<UsStockAsset> {
 
     // 認証ボタンをクリック
     const authButton = page.locator("#auth-btn");
-    await Promise.all([page.waitForURL(MatsuiPage.usStockMemberHome, { timeout: 10000 }), authButton.click()]);
+    await Promise.all([
+      page.waitForURL(MatsuiPage.usStockMemberHome, { timeout: 10000 }),
+      authButton.click(),
+    ]);
     logger.info("認証ボタンをクリックしました。");
 
     // ログイン成功後にCookieを保存
     await backupCookies(page, CHROMIUM_USER_DATA_DIR_MATSUI!);
   }
 
-  async scrapeAssets(page: Page): Promise<UsStockAsset> {
+  async prepareTargetPage(page: Page): Promise<Page> {
     // 米国株ページを表示
     const usStockPageLink = page.locator('[data-page="us-stock-trade-top"]');
     await usStockPageLink.click();
     logger.info("米国株ページリンクをクリックしました。");
 
     // 起動ボタンが表示されるまで待機
-    const launchButton = page.locator('.us-stock-trade > div').first();
+    const launchButton = page.locator(".us-stock-trade > div").first();
     await launchButton.waitFor({ state: "visible", timeout: 10000 });
 
     // 起動ボタンをクリックして新しいタブが開くのを待つ
@@ -102,10 +105,19 @@ export class UsStockStrategy implements AssetScrapingStrategy<UsStockAsset> {
     await yenButton.click();
     logger.info("円表示に切り替えました。");
 
-    // 表示が更新されるまで少し待機
-    await newPage.waitForTimeout(1000);
+    // 円表示に切り替わるまで待機（.total-priceに「円」が含まれることを確認）
+    await totalSummary
+      .locator(".total-price")
+      .filter({ hasText: "円" })
+      .first()
+      .waitFor({ state: "visible", timeout: 10000 });
 
+    return newPage;
+  }
+
+  async scrapeAssets(page: Page): Promise<UsStockAsset> {
     // 各サマリーアイテムを取得
+    const totalSummary = page.locator(".total-summary");
     const summaryItems = totalSummary.locator(".total-summary-item");
     const itemCount = await summaryItems.count();
 

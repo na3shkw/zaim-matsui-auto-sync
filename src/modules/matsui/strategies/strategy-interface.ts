@@ -18,6 +18,13 @@ export interface AssetScrapingStrategy<T> {
   login(page: Page): Promise<void>;
 
   /**
+   * スクレイピング対象のページを準備する（オプショナル）
+   * @param page PlaywrightのPageオブジェクト
+   * @returns スクレイピングに使用するPageオブジェクト
+   */
+  prepareTargetPage?(page: Page): Promise<Page>;
+
+  /**
    * 資産データをスクレイピングする
    * @param page PlaywrightのPageオブジェクト
    * @returns スクレイピングした資産データ
