@@ -3,7 +3,7 @@ import { z } from "zod";
 
 const { CONFIG_FILE } = process.env;
 
-const StrategyTypeSchema = z.literal("fund");
+const StrategyTypeSchema = z.enum(["fund", "usstock"]);
 export type StrategyType = z.infer<typeof StrategyTypeSchema>;
 
 // Zodスキーマ定義

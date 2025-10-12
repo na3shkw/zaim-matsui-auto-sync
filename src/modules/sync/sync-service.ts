@@ -1,5 +1,5 @@
 import dayjs from "dayjs";
-import type { AccountConfig, AppConfig, StrategyType } from "../config.js";
+import type { AccountConfig, AppConfig, MatsuiConfig, StrategyType } from "../config.js";
 import { logger } from "../logger.js";
 import type { MatsuiScraper } from "../matsui/scraper.js";
 import { StrategyFactory } from "../matsui/strategies/index.js";
@@ -65,7 +65,7 @@ export class MatsuiZaimSyncService {
           throw new Error(`口座種別 ${account.matsui.type} のデータが取得できませんでした。`);
         }
 
-        const currentAmount = this.extractAmount(scrapedData, account.matsui.accountName);
+        const currentAmount = this.extractAmount(scrapedData, account.matsui);
 
         await this.processAccount(account, currentAmount, lastTotalAmounts, options.dryRun);
       }
@@ -106,19 +106,30 @@ export class MatsuiZaimSyncService {
    * スクレイピングデータから評価額を抽出
    *
    * @param data スクレイピングによって取得したデータ
-   * @param accountName アカウント名
+   * @param matsuiConfig 松井証券の設定
    * @returns 評価額
    */
-  private extractAmount(data: any, accountName: string): number {
-    // accountName をキーとして評価額を取得
+  private extractAmount(data: any, matsuiConfig: MatsuiConfig): number {
     // 戦略によって構造が異なる場合はここで吸収
-    const value = data.details?.[accountName]?.評価額;
-
-    if (typeof value !== "number") {
-      throw new Error(`${accountName}の評価額を取得できませんでした`);
+    switch (matsuiConfig.type) {
+      case "fund": {
+        // fund戦略: details[accountName].評価額を参照
+        const value = data.details?.[matsuiConfig.accountName]?.評価額;
+        if (typeof value !== "number") {
+          throw new Error(`${matsuiConfig.accountName}の評価額を取得できませんでした`);
+        }
+        return value;
+      }
+      case "usstock": {
+        // usstock戦略: totalAmountフィールドを直接参照
+        if (typeof data.totalAmount !== "number") {
+          throw new Error(`${matsuiConfig.accountName}の評価額を取得できませんでした`);
+        }
+        return data.totalAmount;
+      }
+      default:
+        throw new Error(`未対応の戦略タイプです: ${matsuiConfig.type}`);
     }
-
-    return value;
   }
 
   /**
