@@ -69,14 +69,43 @@ export class UsStockStrategy implements AssetScrapingStrategy<UsStockAsset> {
   }
 
   async prepareTargetPage(page: Page): Promise<Page> {
-    // 米国株ページを表示
-    const usStockPageLink = page.locator('[data-page="us-stock-trade-top"]');
-    await usStockPageLink.click();
-    logger.info("米国株ページリンクをクリックしました。");
+    // ヘッダの「米国株」メニューから辿るとブラウザの実行環境起因でエラー画面になってしまうため、資産状況ページから辿る。
 
-    // 起動ボタンが表示されるまで待機
-    const launchButton = page.locator(".us-stock-trade > div").first();
-    await launchButton.waitFor({ state: "visible", timeout: 10000 });
+    // 資産状況ページに遷移
+    const assetStatusLink = page.locator('[data-page="asset-status-top"]');
+    await assetStatusLink.click();
+    logger.info("資産状況ページに遷移しました。");
+
+    // 資産状況一覧ページに遷移
+    const assetStatusListButton = page.locator(".btn-menu-asset-status-list:visible").first();
+    await assetStatusListButton.waitFor({ state: "visible", timeout: 10000 });
+    await assetStatusListButton.click();
+    logger.info("資産状況一覧ページに遷移しました。");
+
+    // 米国株式時価総額のリンクをクリックして預り残高一覧ページに遷移
+    const usStockMarketValueLink = page.locator("a").filter({ hasText: "米国株式時価総額" });
+    await usStockMarketValueLink.waitFor({ state: "visible", timeout: 10000 });
+    await usStockMarketValueLink.click();
+    logger.info("米国株式時価総額リンクをクリックしました。");
+
+    // iframe (#net-stock-contents) が読み込まれるまで待機
+    const iframe = page.frameLocator("#net-stock-contents");
+    logger.info("iframeの読み込みを待機中...");
+
+    // iframe内の入れ子になったframe (name="CT") を取得
+    const ctFrame = iframe.frameLocator('frame[name="CT"]');
+    logger.info("CTフレームを取得しました。");
+
+    // 「米国株サイト」のリンクをクリック
+    const usStockLink = ctFrame.locator("a").filter({ hasText: "米国株サイト" });
+    await usStockLink.waitFor({ state: "visible", timeout: 10000 });
+    await usStockLink.click();
+    logger.info("「米国株サイト」リンクをクリックしました。");
+
+    // frame内の起動ボタン (name="kidouButton"のimg要素の親a要素) を取得
+    const launchButton = ctFrame.locator('a:has(img[name="kidouButton"])');
+    await launchButton.waitFor({ state: "visible", timeout: 30000 });
+    logger.info("起動ボタンが表示されました。");
 
     // 起動ボタンをクリックして新しいタブが開くのを待つ
     const [newPage] = await Promise.all([
