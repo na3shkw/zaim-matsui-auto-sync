@@ -117,9 +117,12 @@ export class UsStockStrategy implements AssetScrapingStrategy<UsStockAsset> {
     await newPage.waitForLoadState("networkidle");
     logger.info("米国株用サイトが起動しました。");
 
-    // お客様へのご連絡ページが表示されているかチェック
+    // お客様へのご連絡ページが表示されるかを待機（タイムアウトあり）
     const notificationTitle = newPage.locator("text=お客様へのご連絡");
-    const isNotificationVisible = await notificationTitle.isVisible().catch(() => false);
+    const isNotificationVisible = await notificationTitle
+      .waitFor({ state: "visible", timeout: 5000 })
+      .then(() => true)
+      .catch(() => false);
 
     // お客様へのご連絡表示が出た場合は「あとで確認」ボタンをクリック
     if (isNotificationVisible) {
