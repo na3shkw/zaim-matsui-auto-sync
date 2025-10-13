@@ -117,23 +117,37 @@ export class UsStockStrategy implements AssetScrapingStrategy<UsStockAsset> {
     await newPage.waitForLoadState("networkidle");
     logger.info("米国株用サイトが起動しました。");
 
-    // お客様へのご連絡表示が出た場合は「あとで確認」ボタンをクリック
-    const currentUrl = newPage.url();
-    if (currentUrl.includes("/notify")) {
-      const laterButton = newPage.locator("div.btn").filter({ hasText: "あとで確認" });
-      await laterButton.click();
-      logger.info("「あとで確認」ボタンをクリックしました。");
-      await newPage.waitForURL(MatsuiPage.usStockHome, { timeout: 10000 });
-    }
-
     // 米国株の評価額を表示するページに遷移
     await newPage.goto(MatsuiPage.usStockPosition);
     await newPage.waitForLoadState("networkidle");
-    logger.info("米国株の評価額ページに遷移しました。");
 
-    // total-summaryコンテナが表示されるまで待機
+    // total-summaryコンテナが表示されるか、お客様へのご連絡ページかをチェック
     const totalSummary = newPage.locator(".total-summary");
-    await totalSummary.waitFor({ state: "visible", timeout: 30000 });
+    const notificationTitle = newPage.locator("text=お客様へのご連絡");
+
+    const result = await Promise.race([
+      totalSummary.waitFor({ state: "visible", timeout: 10000 }).then(() => "summary"),
+      notificationTitle.waitFor({ state: "visible", timeout: 10000 }).then(() => "notification"),
+    ]).catch(() => {
+      throw new Error("評価額ページまたはお客様へのご連絡ページが表示されませんでした。");
+    });
+
+    // お客様へのご連絡表示が出た場合は「あとで確認」ボタンをクリック
+    if (result === "notification") {
+      const laterButton = newPage.locator("div.btn").filter({ hasText: "あとで確認" });
+      await laterButton.click();
+      logger.info("「あとで確認」ボタンをクリックしました。");
+      await newPage.waitForLoadState("networkidle");
+
+      // 再度評価額ページに遷移
+      await newPage.goto(MatsuiPage.usStockPosition);
+      await newPage.waitForLoadState("networkidle");
+
+      // total-summaryコンテナが表示されるまで待機
+      await totalSummary.waitFor({ state: "visible", timeout: 30000 });
+    }
+
+    logger.info("米国株の評価額ページに遷移しました。");
 
     // 円表示に切り替え
     const controlRow = newPage.locator(".control-row").filter({ hasText: "円" });
