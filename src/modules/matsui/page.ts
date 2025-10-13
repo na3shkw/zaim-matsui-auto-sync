@@ -55,16 +55,16 @@ export class MatsuiPage {
   }
 
   /**
-   * 米国株ログインURL
+   * お客様サイトログインURL
    */
-  static get usStockLogin(): string {
+  static get tradeLogin(): string {
     return this.getFullUrl(this.MATSUI_TRADE_BASE_URL, "/mgap/login");
   }
 
   /**
-   * 米国株ホームページURL
+   * お客様サイトホームページURL
    */
-  static get usStockMemberHome(): string {
+  static get tradeMemberHome(): string {
     return this.getFullUrl(this.MATSUI_TRADE_BASE_URL, "/mgap/member");
   }
 

@@ -15,7 +15,7 @@ const { CHROMIUM_USER_DATA_DIR_MATSUI, MATSUI_LOGIN_ID, MATSUI_PASSWORD } = proc
 export class UsStockStrategy implements AssetScrapingStrategy<UsStockAsset> {
   async isSessionValid(page: Page): Promise<boolean> {
     try {
-      await page.goto(MatsuiPage.usStockMemberHome, { timeout: 10000 });
+      await page.goto(MatsuiPage.tradeMemberHome, { timeout: 10000 });
       // ログインページにリダイレクトされていないかチェック
       const url = page.url();
       // TODO: メンテナンスページにリダイレクトされた場合の処理を実装
@@ -32,7 +32,7 @@ export class UsStockStrategy implements AssetScrapingStrategy<UsStockAsset> {
     }
 
     // ログインページに移動
-    await page.goto(MatsuiPage.usStockLogin);
+    await page.goto(MatsuiPage.tradeLogin);
     await page.waitForLoadState("networkidle");
 
     // ログイン情報を入力
@@ -59,7 +59,7 @@ export class UsStockStrategy implements AssetScrapingStrategy<UsStockAsset> {
     // 認証ボタンをクリック
     const authButton = page.locator("#auth-btn");
     await Promise.all([
-      page.waitForURL(MatsuiPage.usStockMemberHome, { timeout: 10000 }),
+      page.waitForURL(MatsuiPage.tradeMemberHome, { timeout: 10000 }),
       authButton.click(),
     ]);
     logger.info("認証ボタンをクリックしました。");
