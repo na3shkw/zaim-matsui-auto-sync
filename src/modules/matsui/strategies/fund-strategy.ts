@@ -25,9 +25,9 @@ export class FundStrategy implements AssetScrapingStrategy<Position> {
       }
 
       try {
-        // モーダルが表示されるまで待機（最大3秒）
+        // モーダルが表示されるまで待機（最大10秒）
         await page.waitForSelector(".modal-container.dialog.error", {
-          timeout: 3000,
+          timeout: 10000,
           state: "visible",
         });
       } catch {
