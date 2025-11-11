@@ -66,7 +66,6 @@ export class MatsuiZaimSyncService {
           // 戦略ごとのエラーをキャプチャ
           await this.captureErrorContext(this.scraper.currentPage, error as Error, {
             strategyType,
-            operation: "認証またはスクレイピング",
           });
           throw error; // 再スロー
         }
@@ -156,12 +155,12 @@ export class MatsuiZaimSyncService {
    *
    * @param page Playwrightのページオブジェクト
    * @param error 発生したエラー
-   * @param context コンテキスト情報（戦略タイプ、実行中の操作など）
+   * @param context コンテキスト情報（戦略タイプ）
    */
   private async captureErrorContext(
     page: Page | null,
     error: Error,
-    context: { strategyType?: string; operation: string }
+    context: { strategyType?: string }
   ): Promise<void> {
     try {
       // ERROR_LOG_DIR が未設定の場合はスキップ
