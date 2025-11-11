@@ -13,6 +13,13 @@ export class MatsuiScraper {
   private page: Page | null = null;
 
   /**
+   * 現在のページオブジェクトを取得
+   */
+  get currentPage(): Page | null {
+    return this.page;
+  }
+
+  /**
    * ブラウザを初期化してCookieを復元
    */
   async initialize(): Promise<void> {

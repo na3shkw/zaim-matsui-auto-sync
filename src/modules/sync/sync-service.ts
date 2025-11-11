@@ -1,10 +1,15 @@
 import dayjs from "dayjs";
+import fs from "fs";
+import path from "path";
+import type { Page } from "playwright";
 import type { AccountConfig, AppConfig, MatsuiConfig, StrategyType } from "../config.js";
 import { logger } from "../logger.js";
 import type { MatsuiScraper } from "../matsui/scraper.js";
 import { StrategyFactory } from "../matsui/strategies/index.js";
 import type { Zaim } from "../zaim/client.js";
 import type { TotalAmountRepository } from "./total-amount-repository.js";
+
+const { ERROR_LOG_DIR } = process.env;
 
 export interface SyncOptions {
   dryRun: boolean;
@@ -46,16 +51,25 @@ export class MatsuiZaimSyncService {
       const scrapedDataMap = new Map<StrategyType, any>();
 
       for (const [strategyType, _] of strategyGroups) {
-        logger.info(`戦略 ${strategyType} の処理を開始します。`);
-        const strategy = StrategyFactory.create(strategyType);
-        this.scraper.setStrategy(strategy);
-        logger.info(`戦略 ${strategyType} の認証を開始します。`);
-        await this.scraper.authenticate();
-        logger.info(`戦略 ${strategyType} の認証が完了しました。`);
-        logger.info(`戦略 ${strategyType} のスクレイピングを開始します。`);
-        const data = await this.scraper.scrape();
-        logger.info(`戦略 ${strategyType} のスクレイピングが完了しました。`);
-        scrapedDataMap.set(strategyType, data);
+        try {
+          logger.info(`戦略 ${strategyType} の処理を開始します。`);
+          const strategy = StrategyFactory.create(strategyType);
+          this.scraper.setStrategy(strategy);
+          logger.info(`戦略 ${strategyType} の認証を開始します。`);
+          await this.scraper.authenticate();
+          logger.info(`戦略 ${strategyType} の認証が完了しました。`);
+          logger.info(`戦略 ${strategyType} のスクレイピングを開始します。`);
+          const data = await this.scraper.scrape();
+          logger.info(`戦略 ${strategyType} のスクレイピングが完了しました。`);
+          scrapedDataMap.set(strategyType, data);
+        } catch (error) {
+          // 戦略ごとのエラーをキャプチャ
+          await this.captureErrorContext(this.scraper.currentPage, error as Error, {
+            strategyType,
+            operation: "認証またはスクレイピング",
+          });
+          throw error; // 再スロー
+        }
       }
 
       // 前回記録時点の総額を取得
@@ -134,6 +148,81 @@ export class MatsuiZaimSyncService {
       }
       default:
         throw new Error(`未対応の戦略タイプです: ${matsuiConfig.type}`);
+    }
+  }
+
+  /**
+   * エラー発生時のコンテキスト情報をキャプチャする
+   *
+   * @param page Playwrightのページオブジェクト
+   * @param error 発生したエラー
+   * @param context コンテキスト情報（戦略タイプ、実行中の操作など）
+   */
+  private async captureErrorContext(
+    page: Page | null,
+    error: Error,
+    context: { strategyType?: string; operation: string }
+  ): Promise<void> {
+    try {
+      // ERROR_LOG_DIR が未設定の場合はスキップ
+      if (!ERROR_LOG_DIR) {
+        logger.warn(
+          "ERROR_LOG_DIR が設定されていないため、エラーコンテキストのキャプチャをスキップします。"
+        );
+        return;
+      }
+
+      // ページがnullの場合はメタデータのみ保存
+      if (!page) {
+        logger.warn(
+          "ページオブジェクトが取得できないため、スクリーンショットとHTMLのキャプチャをスキップします。"
+        );
+      }
+
+      // タイムスタンプ生成
+      const timestamp = dayjs().format("YYYYMMDD-HHmmss");
+
+      // ディレクトリ名の生成（タイムスタンプのみ）
+      const errorLogDir = path.join(ERROR_LOG_DIR, timestamp);
+
+      // ディレクトリ作成
+      fs.mkdirSync(errorLogDir, { recursive: true });
+
+      // URL取得
+      const url = page ? page.url() : "N/A";
+
+      // メタデータ保存
+      const metadata = {
+        timestamp: dayjs().toISOString(),
+        url,
+        strategyType: context.strategyType || "N/A",
+        error: {
+          message: error.message,
+          stack: error.stack,
+        },
+      };
+      fs.writeFileSync(path.join(errorLogDir, "metadata.json"), JSON.stringify(metadata, null, 2), {
+        encoding: "utf-8",
+      });
+
+      // スクリーンショット保存
+      if (page) {
+        await page.screenshot({
+          path: path.join(errorLogDir, "screenshot.png"),
+          fullPage: true,
+        });
+      }
+
+      // HTML保存
+      if (page) {
+        const html = await page.content();
+        fs.writeFileSync(path.join(errorLogDir, "page.html"), html, { encoding: "utf-8" });
+      }
+
+      logger.info(`エラーコンテキストを保存しました: ${errorLogDir}`);
+    } catch (captureError) {
+      // エラーキャプチャ自体が失敗しても元のエラーを優先
+      logger.error(captureError, "エラーコンテキストのキャプチャ中にエラーが発生しました。");
     }
   }
 
