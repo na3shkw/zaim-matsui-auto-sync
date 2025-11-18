@@ -31,7 +31,7 @@
     "pino-pretty": "^13.1.1",
     "tsx": "^4.20.3",
     "typescript": "^5.9.2",
-    "vitest": "^3.2.4"
+    "vitest": "^4.0.10"
   },
   "dependencies": {
     "commander": "^14.0.0",
