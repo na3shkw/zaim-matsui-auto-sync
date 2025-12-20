@@ -20,6 +20,16 @@ export async function openBrowser(userDataDir: string, headless: boolean = true)
       "--single-process",
     ],
   });
+
+  // ランダムに表示されるポップアップスクリプトをブロック
+  await browserContext.route(/\/Rtoaster(\.Popup)?\.js(\?.*)?$/, (route) =>
+    route.fulfill({
+      status: 200,
+      contentType: "application/javascript",
+      body: "// blocked",
+    })
+  );
+
   const page = browserContext.pages()[0];
   if (!page) {
     throw Error("予期せぬエラーによりページを開けません。");
