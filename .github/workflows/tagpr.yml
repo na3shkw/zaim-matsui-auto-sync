@@ -69,3 +69,19 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
+
+  publish-release:
+    needs: [tagpr, docker]
+    if: needs.tagpr.outputs.tag != ''
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      - name: Create and publish release
+        uses: actions/github-script@v8
+        with:
+          script-file: .github/scripts/create-release.js
+        env:
+          TAG_NAME: ${{ needs.tagpr.outputs.tag }}
