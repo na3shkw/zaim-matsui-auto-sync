@@ -1,11 +1,6 @@
 services:
   app:
-    build:
-      context: .
-      dockerfile: Dockerfile
-      args:
-        UID: ${UID:-1000}
-        GID: ${GID:-1000}
+    image: ghcr.io/na3shkw/zaim-matsui-auto-sync:${IMAGE_TAG:-latest}
     environment:
       NODE_ENV: production
       CHROMIUM_USER_DATA_DIR_GOOGLE: /home/appuser/.config/appdata/chromium/google
