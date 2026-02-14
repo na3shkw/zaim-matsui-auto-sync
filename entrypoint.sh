@@ -19,7 +19,7 @@ if [ -z "$APP_COMMAND" ]; then
     exit 1
 fi
 
-sudo chown -R appuser:appuser ~/.config
+sudo chown -R "$(id -u):$(id -g)" /home/appuser/.config 2>/dev/null || true
 
 # VNCサーバーを起動する
 if [[ "$ENABLE_VNC" = "1" || "$APP_COMMAND" = "login-google" ]]; then
