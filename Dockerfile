@@ -34,8 +34,7 @@ RUN if getent passwd $UID; then deluser $(getent passwd $UID | cut -d: -f1); fi 
     useradd -u $UID -g $GID -m appuser && \
     mkdir -p /etc/sudoers.d && \
     echo 'appuser ALL=(ALL) NOPASSWD: ALL' >> /etc/sudoers.d/appuser && \
-    echo 'ALL ALL=(ALL) NOPASSWD: /usr/bin/chown' >> /etc/sudoers.d/chown-for-uid-override && \
-    chmod 0440 /etc/sudoers.d/appuser /etc/sudoers.d/chown-for-uid-override && \
+    chmod 0440 /etc/sudoers.d/appuser && \
     chown -R appuser:appuser .
     
 USER appuser
