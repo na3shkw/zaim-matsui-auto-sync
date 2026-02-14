@@ -19,32 +19,35 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
     echo 'Binary::apt::APT::Keep-Downloaded-Packages "true";' > /etc/apt/apt.conf.d/keep-cache && \
     apt-get update && \
     DEBIAN_FRONTEND=noninteractive apt-get --no-install-recommends install -y \
-        sudo \
+        gosu \
         lxde \
         tigervnc-standalone-server \
         tigervnc-common \
         dbus-x11
 
-RUN mkdir -p /etc/sudoers.d && \
-    echo 'node ALL=(ALL) NOPASSWD: ALL' >> /etc/sudoers.d/node && \
-    chmod 0440 /etc/sudoers.d/node && \
-    chown -R node:node .
-
-USER node
+RUN chown -R node:node .
 
 COPY --from=builder --chown=node:node /app/dist ./dist
 COPY --from=builder --chown=node:node /app/package*.json ./
 
-RUN npm ci --omit=dev --ignore-scripts && \
-    npx playwright install --with-deps --no-shell chromium && \
+USER node
+
+RUN npm ci --omit=dev --ignore-scripts
+
+USER root
+
+ENV PLAYWRIGHT_BROWSERS_PATH=/home/node/.cache/ms-playwright
+
+RUN npx playwright install --with-deps --no-shell chromium && \
     npm cache clean --force && \
-    sudo npm uninstall -g npm && \
-    sudo find /usr/local/bin -type l -name "yarn*" -exec unlink {} \; && \
-    sudo rm -rf \
+    npm uninstall -g npm && \
+    find /usr/local/bin -type l -name "yarn*" -exec unlink {} \; && \
+    rm -rf \
         /opt/yarn-* \
         /tmp/* \
         /home/node/.cache/ms-playwright/ffmpeg* \
-        /home/node/.npm/_logs/*
+        /home/node/.npm/_logs/* && \
+    chown -R node:node /home/node
 
 COPY --chmod=755 entrypoint.sh /
 

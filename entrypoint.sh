@@ -21,22 +21,22 @@ if [ -z "$APP_COMMAND" ]; then
     exit 1
 fi
 
-# PUID/PGIDが指定されている場合、nodeユーザーのUID/GIDを動的に変更する
-PUID=${PUID:-1000}
-PGID=${PGID:-1000}
-
-if [ "$PGID" != "$(id -g)" ] || [ "$PUID" != "$(id -u)" ]; then
-    echo "Changing node user UID:GID to $PUID:$PGID"
-    sudo groupmod -o -g "$PGID" node
-    sudo usermod -o -u "$PUID" node
-    # /app と /home/node の所有者を新しいUID/GIDに変更
-    sudo chown -R node:node /app /home/node
+# PUID/PGIDが指定されている場合のみ、nodeユーザーのUID/GIDを動的に変更する
+if [ -n "$PUID" ] || [ -n "$PGID" ]; then
+    PUID=${PUID:-$(id -u node)}
+    PGID=${PGID:-$(id -g node)}
+    if [ "$PGID" != "$(id -g node)" ] || [ "$PUID" != "$(id -u node)" ]; then
+        echo "Changing node user UID:GID to $PUID:$PGID"
+        groupmod -o -g "$PGID" node
+        usermod -o -u "$PUID" node
+        chown -R node:node /app /home/node
+    fi
 fi
 
 # VNCサーバーを起動する
 if [[ "$ENABLE_VNC" = "1" || "$APP_COMMAND" = "login-google" ]]; then
     export DISPLAY=:1
-    vncserver "$DISPLAY" -geometry ${VNC_GEOMETRY:-1280x960} -SecurityTypes None
+    gosu node vncserver "$DISPLAY" -geometry "${VNC_GEOMETRY:-1280x960}" -SecurityTypes None
 fi
 
 # APP_ARGSを配列に変換（引用符やスペースを正しく処理）
@@ -44,13 +44,14 @@ eval "set -- $APP_ARGS"
 
 case "$APP_COMMAND" in
     "sync-matsui-zaim")
-        exec ./dist/commands/sync-matsui-zaim.js "$@"
+        exec gosu node ./dist/commands/sync-matsui-zaim.js "$@"
         ;;
     "zaim-cli")
-        exec ./dist/commands/zaim/index.js "$@"
+        exec gosu node ./dist/commands/zaim/index.js "$@"
         ;;
     "login-google")
-        exec ~/.cache/ms-playwright/chromium-1181/chrome-linux/chrome \
+        chromium=$(find /home/node/.cache/ms-playwright/ -executable -name chrome)
+        exec gosu node "$chromium" \
             --user-data-dir="$CHROMIUM_USER_DATA_DIR_GOOGLE" \
             "$@"
         ;;
