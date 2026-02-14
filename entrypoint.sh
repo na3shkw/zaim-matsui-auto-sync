@@ -27,9 +27,9 @@ if [ -n "$PUID" ] || [ -n "$PGID" ]; then
     PGID=${PGID:-$(id -g node)}
     if [ "$PGID" != "$(id -g node)" ] || [ "$PUID" != "$(id -u node)" ]; then
         echo "Changing node user UID:GID to $PUID:$PGID"
-        groupmod -o -g "$PGID" node
-        usermod -o -u "$PUID" node
-        chown -R node:node /app /home/node
+        sed -i "s/^node:x:[0-9]*:[0-9]*:/node:x:$PUID:$PGID:/" /etc/passwd
+        sed -i "s/^node:x:[0-9]*:/node:x:$PGID:/" /etc/group
+        chown -R node:node /app /home/node/.config
     fi
 fi
 
@@ -50,7 +50,7 @@ case "$APP_COMMAND" in
         exec gosu node ./dist/commands/zaim/index.js "$@"
         ;;
     "login-google")
-        chromium=$(find /home/node/.cache/ms-playwright/ -executable -name chrome -print -quit)
+        chromium=$(find /ms-playwright/ -executable -name chrome -print -quit)
         exec gosu node "$chromium" \
             --user-data-dir="$CHROMIUM_USER_DATA_DIR_GOOGLE" \
             "$@"

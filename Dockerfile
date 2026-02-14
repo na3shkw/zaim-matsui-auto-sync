@@ -36,7 +36,7 @@ RUN npm ci --omit=dev --ignore-scripts
 
 USER root
 
-ENV PLAYWRIGHT_BROWSERS_PATH=/home/node/.cache/ms-playwright
+ENV PLAYWRIGHT_BROWSERS_PATH=/ms-playwright
 
 RUN npx playwright install --with-deps --no-shell chromium && \
     npm cache clean --force && \
@@ -45,7 +45,7 @@ RUN npx playwright install --with-deps --no-shell chromium && \
     rm -rf \
         /opt/yarn-* \
         /tmp/* \
-        /home/node/.cache/ms-playwright/ffmpeg* \
+        /ms-playwright/ffmpeg* \
         /home/node/.npm/_logs/* && \
     chown -R node:node /home/node
 
