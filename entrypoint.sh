@@ -50,7 +50,7 @@ case "$APP_COMMAND" in
         exec gosu node ./dist/commands/zaim/index.js "$@"
         ;;
     "login-google")
-        chromium=$(find /home/node/.cache/ms-playwright/ -executable -name chrome)
+        chromium=$(find /home/node/.cache/ms-playwright/ -executable -name chrome -print -quit)
         exec gosu node "$chromium" \
             --user-data-dir="$CHROMIUM_USER_DATA_DIR_GOOGLE" \
             "$@"
