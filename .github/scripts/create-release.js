@@ -18,12 +18,16 @@ try {
   const releaseNotes = generateNotesResponse.data.body;
   console.log('Release notes generated successfully');
 
-  // Find the draft release by tag
-  const { data: release } = await github.rest.repos.getReleaseByTag({
+  // Find the draft release by listing releases and matching the tag
+  const { data: releases } = await github.rest.repos.listReleases({
     owner: repo.owner,
     repo: repo.repo,
-    tag: tagName,
   });
+
+  const release = releases.find(r => r.tag_name === tagName);
+  if (!release) {
+    throw new Error(`Release with tag ${tagName} not found`);
+  }
 
   // Update the release to publish it
   await github.rest.repos.updateRelease({
