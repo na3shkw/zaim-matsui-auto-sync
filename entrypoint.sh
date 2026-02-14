@@ -29,7 +29,7 @@ if [ -n "$PUID" ] || [ -n "$PGID" ]; then
         echo "Changing node user UID:GID to $PUID:$PGID"
         sed -i "s/^node:x:[0-9]*:[0-9]*:/node:x:$PUID:$PGID:/" /etc/passwd
         sed -i "s/^node:x:[0-9]*:/node:x:$PGID:/" /etc/group
-        chown -R node:node /app /home/node/.config
+        chown -R node:node /home/node/.config
     fi
 fi
 
