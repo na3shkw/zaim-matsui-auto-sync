@@ -7,6 +7,8 @@ show_usage() {
     echo "                          zaim-cli"
     echo "                          login-google"
     echo "  APP_ARGS             - コマンドに渡すオプション/引数"
+    echo "  PUID                 - マウントされたファイルの所有者UID（デフォルト: 設定なし＝変更しない）"
+    echo "  PGID                 - マウントされたファイルの所有者GID（デフォルト: 設定なし＝変更しない）"
     echo "  ENABLE_VNC=1         - VNCサーバーを起動する"
     echo "  VNC_GEOMETRY         - VNCサーバーの解像度を設定する（デフォルト1280x960）"
 }
@@ -19,7 +21,11 @@ if [ -z "$APP_COMMAND" ]; then
     exit 1
 fi
 
-sudo chown -R "$(id -u):$(id -g)" /home/appuser/.config 2>/dev/null || true
+# PUID/PGIDが指定されている場合、マウントされたファイルの所有者を変更する
+if [ -n "$PUID" ] || [ -n "$PGID" ]; then
+    OWNER="${PUID:-$(id -u)}:${PGID:-$(id -g)}"
+    sudo chown -R "$OWNER" /home/appuser/.config
+fi
 
 # VNCサーバーを起動する
 if [[ "$ENABLE_VNC" = "1" || "$APP_COMMAND" = "login-google" ]]; then

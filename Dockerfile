@@ -13,9 +13,6 @@ FROM node:22-bookworm-slim
 
 WORKDIR /app
 
-ARG UID=1000
-ARG GID=1000
-
 RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
     --mount=type=cache,target=/var/lib/apt,sharing=locked \
     rm -f /etc/apt/apt.conf.d/docker-clean && \
@@ -28,10 +25,8 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
         tigervnc-common \
         dbus-x11
 
-RUN if getent passwd $UID; then deluser $(getent passwd $UID | cut -d: -f1); fi && \
-    if getent group $GID; then delgroup $(getent group $GID | cut -d: -f1); fi && \
-    groupadd -g $GID appuser && \
-    useradd -u $UID -g $GID -m appuser && \
+RUN groupadd -g 1000 appuser && \
+    useradd -u 1000 -g 1000 -m appuser && \
     mkdir -p /etc/sudoers.d && \
     echo 'appuser ALL=(ALL) NOPASSWD: ALL' >> /etc/sudoers.d/appuser && \
     chmod 0440 /etc/sudoers.d/appuser && \
