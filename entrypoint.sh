@@ -27,8 +27,8 @@ if [ -n "$PUID" ] || [ -n "$PGID" ]; then
     PGID=${PGID:-$(id -g node)}
     if [ "$PGID" != "$(id -g node)" ] || [ "$PUID" != "$(id -u node)" ]; then
         echo "Changing node user UID:GID to $PUID:$PGID"
-        sed -i "s/^node:x:[0-9]*:[0-9]*:/node:x:$PUID:$PGID:/" /etc/passwd
-        sed -i "s/^node:x:[0-9]*:/node:x:$PGID:/" /etc/group
+        groupmod -o -g "$PGID" node
+        usermod -o -u "$PUID" node
         chown -R node:node /home/node/.config
     fi
 fi
