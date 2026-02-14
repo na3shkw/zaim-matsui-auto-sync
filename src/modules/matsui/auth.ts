@@ -99,8 +99,6 @@ export async function getAuthenticationCode(): Promise<MatsuiAuthenticationCode>
       HEADLESS === "true"
     ));
 
-    let lastError: Error | undefined;
-
     for (let attempt = 1; attempt <= MAX_RETRY_ATTEMPTS; attempt++) {
       try {
         await page.goto(GOOGLE_MESSAGE_MATSUI_CONVERSATION_URL);
@@ -112,9 +110,14 @@ export async function getAuthenticationCode(): Promise<MatsuiAuthenticationCode>
 
         // ここでポーリングが終わるまで待つ
         const result = await new Promise<MatsuiAuthenticationCode>((resolve, reject) => {
+          let settled = false;
+
           const poll = async () => {
+            if (settled) return;
+
             // タイムアウトチェック
             if (dayjs().diff(startTime, "second") > POLLING_TIMEOUT_SECONDS) {
+              settled = true;
               reject(new Error("認証コードの取得がタイムアウトしました。"));
               return;
             }
@@ -122,6 +125,7 @@ export async function getAuthenticationCode(): Promise<MatsuiAuthenticationCode>
             // 認証コードを検索
             const code = await findAuthenticationCode(page);
             if (code) {
+              settled = true;
               resolve(code);
               return;
             }
@@ -135,8 +139,6 @@ export async function getAuthenticationCode(): Promise<MatsuiAuthenticationCode>
 
         return result;
       } catch (error) {
-        lastError = error as Error;
-
         // TimeoutError かつ最終試行でない場合はリトライ
         if ((error as Error).name === "TimeoutError" && attempt < MAX_RETRY_ATTEMPTS) {
           const delay = RETRY_BASE_DELAY_SECONDS * Math.pow(2, attempt - 1);
@@ -147,13 +149,17 @@ export async function getAuthenticationCode(): Promise<MatsuiAuthenticationCode>
           continue;
         }
 
-        logger.error(error, "認証コードの取得中にエラーが発生しました。");
+        if ((error as Error).name === "TimeoutError") {
+          logger.error(`最大リトライ回数（${MAX_RETRY_ATTEMPTS}回）に達しました。認証コードの取得を中止します。`);
+        } else {
+          logger.error(error, "認証コードの取得中にエラーが発生しました。");
+        }
         throw error;
       }
     }
 
     // ループを正常に抜けることはないが、TypeScriptの型チェックのために必要
-    throw lastError ?? new Error("認証コードの取得に失敗しました。");
+    throw new Error("認証コードの取得に失敗しました。");
   } finally {
     if (browserContext) {
       await browserContext.close();
