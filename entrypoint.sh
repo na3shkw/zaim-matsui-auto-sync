@@ -21,10 +21,16 @@ if [ -z "$APP_COMMAND" ]; then
     exit 1
 fi
 
-# PUID/PGIDが指定されている場合、マウントされたファイルの所有者を変更する
-if [ -n "$PUID" ] || [ -n "$PGID" ]; then
-    OWNER="${PUID:-$(id -u)}:${PGID:-$(id -g)}"
-    sudo chown -R "$OWNER" /home/appuser/.config
+# PUID/PGIDが指定されている場合、nodeユーザーのUID/GIDを動的に変更する
+PUID=${PUID:-1000}
+PGID=${PGID:-1000}
+
+if [ "$PGID" != "$(id -g)" ] || [ "$PUID" != "$(id -u)" ]; then
+    echo "Changing node user UID:GID to $PUID:$PGID"
+    sudo groupmod -o -g "$PGID" node
+    sudo usermod -o -u "$PUID" node
+    # /app と /home/node の所有者を新しいUID/GIDに変更
+    sudo chown -R node:node /app /home/node
 fi
 
 # VNCサーバーを起動する

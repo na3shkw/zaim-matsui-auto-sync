@@ -3,12 +3,12 @@ services:
     image: ghcr.io/na3shkw/zaim-matsui-auto-sync:${IMAGE_TAG:-latest}
     environment:
       NODE_ENV: production
-      CHROMIUM_USER_DATA_DIR_GOOGLE: /home/appuser/.config/appdata/chromium/google
-      CHROMIUM_USER_DATA_DIR_MATSUI: /home/appuser/.config/appdata/chromium/matsui
-      ZAIM_ACCESS_TOKEN_FILE: /home/appuser/.config/appdata/zaim/zaim-tokens.json
-      ZAIM_TOTAL_AMOUNT_FILE: /home/appuser/.config/appdata/zaim/zaim-total-amount.json
-      ERROR_LOG_DIR: /home/appuser/.config/appdata/error-logs
-      CONFIG_FILE: /home/appuser/.config/appdata/config.json
+      CHROMIUM_USER_DATA_DIR_GOOGLE: /home/node/.config/appdata/chromium/google
+      CHROMIUM_USER_DATA_DIR_MATSUI: /home/node/.config/appdata/chromium/matsui
+      ZAIM_ACCESS_TOKEN_FILE: /home/node/.config/appdata/zaim/zaim-tokens.json
+      ZAIM_TOTAL_AMOUNT_FILE: /home/node/.config/appdata/zaim/zaim-total-amount.json
+      ERROR_LOG_DIR: /home/node/.config/appdata/error-logs
+      CONFIG_FILE: /home/node/.config/appdata/config.json
     env_file:
       - .env
     security_opt:
@@ -16,18 +16,18 @@ services:
     volumes:
       - type: volume
         source: chromium-data
-        target: /home/appuser/.config/appdata/chromium
+        target: /home/node/.config/appdata/chromium
       - type: bind
         source: ./appdata/zaim
-        target: /home/appuser/.config/appdata/zaim
+        target: /home/node/.config/appdata/zaim
         consistency: consistent
       - type: bind
         source: ./appdata/error-logs
-        target: /home/appuser/.config/appdata/error-logs
+        target: /home/node/.config/appdata/error-logs
         consistency: consistent
       - type: bind
         source: ./config.json
-        target: /home/appuser/.config/appdata/config.json
+        target: /home/node/.config/appdata/config.json
         consistency: consistent
     network_mode: "host"
     init: true

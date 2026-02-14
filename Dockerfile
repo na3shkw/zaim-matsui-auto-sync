@@ -25,17 +25,15 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
         tigervnc-common \
         dbus-x11
 
-RUN groupadd -g 1000 appuser && \
-    useradd -u 1000 -g 1000 -m appuser && \
-    mkdir -p /etc/sudoers.d && \
-    echo 'appuser ALL=(ALL) NOPASSWD: ALL' >> /etc/sudoers.d/appuser && \
-    chmod 0440 /etc/sudoers.d/appuser && \
-    chown -R appuser:appuser .
-    
-USER appuser
+RUN mkdir -p /etc/sudoers.d && \
+    echo 'node ALL=(ALL) NOPASSWD: ALL' >> /etc/sudoers.d/node && \
+    chmod 0440 /etc/sudoers.d/node && \
+    chown -R node:node .
 
-COPY --from=builder --chown=appuser:appuser /app/dist ./dist
-COPY --from=builder --chown=appuser:appuser /app/package*.json ./
+USER node
+
+COPY --from=builder --chown=node:node /app/dist ./dist
+COPY --from=builder --chown=node:node /app/package*.json ./
 
 RUN npm ci --omit=dev --ignore-scripts && \
     npx playwright install --with-deps --no-shell chromium && \
@@ -45,8 +43,8 @@ RUN npm ci --omit=dev --ignore-scripts && \
     sudo rm -rf \
         /opt/yarn-* \
         /tmp/* \
-        /home/appuser/.cache/ms-playwright/ffmpeg* \
-        /home/appuser/.npm/_logs/*
+        /home/node/.cache/ms-playwright/ffmpeg* \
+        /home/node/.npm/_logs/*
 
 COPY --chmod=755 entrypoint.sh /
 
