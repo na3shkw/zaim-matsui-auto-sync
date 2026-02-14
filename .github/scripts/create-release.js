@@ -18,11 +18,18 @@ try {
   const releaseNotes = generateNotesResponse.data.body;
   console.log('Release notes generated successfully');
 
-  // Update the release
-  await github.rest.repos.updateRelease({
+  // Find the draft release by tag
+  const { data: release } = await github.rest.repos.getReleaseByTag({
     owner: repo.owner,
     repo: repo.repo,
     tag: tagName,
+  });
+
+  // Update the release to publish it
+  await github.rest.repos.updateRelease({
+    owner: repo.owner,
+    repo: repo.repo,
+    release_id: release.id,
     draft: false,
     make_latest: 'true',
     body: releaseNotes
