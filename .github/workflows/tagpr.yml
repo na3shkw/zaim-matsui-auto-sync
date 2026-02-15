@@ -93,6 +93,9 @@ jobs:
     permissions:
       contents: write
     steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
       - name: Publish release
         run: gh release edit "$TAG_NAME" --draft=false --latest
         env:
