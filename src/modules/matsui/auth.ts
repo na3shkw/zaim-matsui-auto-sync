@@ -15,6 +15,7 @@ interface MatsuiAuthenticationCode {
 const {
   AUTH_CODE_POLLING_INTERVAL_SECONDS,
   AUTH_CODE_POLLING_TIMEOUT_SECONDS,
+  AUTH_CODE_MAX_RETRY_ATTEMPTS,
   GOOGLE_MESSAGE_MATSUI_CONVERSATION_URL,
   CHROMIUM_USER_DATA_DIR_GOOGLE,
   HEADLESS,
@@ -25,6 +26,8 @@ const TIMESTAMP_REGEX = /(\d{4}年\d{1,2}月\d{1,2}日 \d{1,2}:\d{1,2}) に受�
 const POLLING_INTERVAL_SECONDS = parseInt(AUTH_CODE_POLLING_INTERVAL_SECONDS ?? "10", 10);
 const POLLING_TIMEOUT_SECONDS = parseInt(AUTH_CODE_POLLING_TIMEOUT_SECONDS ?? "60", 10);
 const AUTH_CODE_VALIDITY_DURATION_MINUTES = 3;
+const MAX_RETRY_ATTEMPTS = parseInt(AUTH_CODE_MAX_RETRY_ATTEMPTS ?? "3", 10);
+const RETRY_BASE_DELAY_SECONDS = 5;
 
 const MESSAGE_SELECTOR = "mws-text-message-part";
 
@@ -96,40 +99,67 @@ export async function getAuthenticationCode(): Promise<MatsuiAuthenticationCode>
       HEADLESS === "true"
     ));
 
-    await page.goto(GOOGLE_MESSAGE_MATSUI_CONVERSATION_URL);
+    for (let attempt = 1; attempt <= MAX_RETRY_ATTEMPTS; attempt++) {
+      try {
+        await page.goto(GOOGLE_MESSAGE_MATSUI_CONVERSATION_URL);
 
-    // 読み込みが完了するまで待機する
-    await page.locator("mws-message-part-content").last().waitFor({ state: "visible" });
+        // 読み込みが完了するまで待機する
+        await page.locator("mws-message-part-content").last().waitFor({ state: "visible" });
 
-    const startTime = dayjs();
+        const startTime = dayjs();
 
-    // ここでポーリングが終わるまで待つ
-    const result = await new Promise<MatsuiAuthenticationCode>((resolve, reject) => {
-      const poll = async () => {
-        // タイムアウトチェック
-        if (dayjs().diff(startTime, "second") > POLLING_TIMEOUT_SECONDS) {
-          reject(new Error("認証コードの取得がタイムアウトしました。"));
-          return;
+        // ここでポーリングが終わるまで待つ
+        const result = await new Promise<MatsuiAuthenticationCode>((resolve, reject) => {
+          let settled = false;
+
+          const poll = async () => {
+            if (settled) return;
+
+            // タイムアウトチェック
+            if (dayjs().diff(startTime, "second") > POLLING_TIMEOUT_SECONDS) {
+              settled = true;
+              reject(new Error("認証コードの取得がタイムアウトしました。"));
+              return;
+            }
+
+            // 認証コードを検索
+            const code = await findAuthenticationCode(page);
+            if (code) {
+              settled = true;
+              resolve(code);
+              return;
+            }
+
+            logger.info(`認証コードは未着です。${POLLING_INTERVAL_SECONDS} 秒後に再度確認します。`);
+            setTimeout(poll, POLLING_INTERVAL_SECONDS * 1000);
+          };
+
+          poll();
+        });
+
+        return result;
+      } catch (error) {
+        // TimeoutError かつ最終試行でない場合はリトライ
+        if ((error as Error).name === "TimeoutError" && attempt < MAX_RETRY_ATTEMPTS) {
+          const delay = RETRY_BASE_DELAY_SECONDS * Math.pow(2, attempt - 1);
+          logger.warn(
+            `認証コードの取得中にタイムアウトが発生しました（試行 ${attempt}/${MAX_RETRY_ATTEMPTS}）。${delay} 秒後にリトライします。`
+          );
+          await new Promise((resolve) => setTimeout(resolve, delay * 1000));
+          continue;
         }
 
-        // 認証コードを検索
-        const code = await findAuthenticationCode(page);
-        if (code) {
-          resolve(code);
-          return;
+        if ((error as Error).name === "TimeoutError") {
+          logger.error(`最大リトライ回数（${MAX_RETRY_ATTEMPTS}回）に達しました。認証コードの取得を中止します。`);
+        } else {
+          logger.error(error, "認証コードの取得中にエラーが発生しました。");
         }
+        throw error;
+      }
+    }
 
-        logger.info(`認証コードは未着です。${POLLING_INTERVAL_SECONDS} 秒後に再度確認します。`);
-        setTimeout(poll, POLLING_INTERVAL_SECONDS * 1000);
-      };
-
-      poll();
-    });
-
-    return result;
-  } catch (error) {
-    logger.error(error, "認証コードの取得中にエラーが発生しました。");
-    throw error;
+    // ループを正常に抜けることはないが、TypeScriptの型チェックのために必要
+    throw new Error("認証コードの取得に失敗しました。");
   } finally {
     if (browserContext) {
       await browserContext.close();

@@ -132,7 +132,7 @@ docker compose run --rm -e APP_COMMAND='sync-matsui-zaim' -e APP_ARGS='--dry-run
 
 1. 下記のコマンドで Chromium を起動する。
     ```bash
-    ~/.cache/ms-playwright/chromium-1181/chrome-linux/chrome --no-sandbox --user-data-dir=./appdata/chromium/google https://www.google.com
+    $(find $PLAYWRIGHT_BROWSERS_PATH/ -executable -name chrome -print -quit) --no-sandbox --user-data-dir=./appdata/chromium/google https://www.google.com
     ```
 2. 手動操作で Google にログインする。
 3. ログイン後、https://messages.google.com/web/ に遷移してデバイスのペア設定を行う。

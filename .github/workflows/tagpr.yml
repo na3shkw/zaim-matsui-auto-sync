@@ -93,12 +93,8 @@ jobs:
     permissions:
       contents: write
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v6
-
-      - name: Create and publish release
-        uses: actions/github-script@v8
-        with:
-          script-file: .github/scripts/create-release.js
+      - name: Publish release
+        run: gh release edit "$TAG_NAME" --draft=false --latest
         env:
           TAG_NAME: ${{ needs.tagpr.outputs.tag }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
