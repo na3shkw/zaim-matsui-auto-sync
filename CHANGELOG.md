@@ -1,5 +1,11 @@
 # Changelog
 
+## [v0.1.1](https://github.com/na3shkw/zaim-matsui-auto-sync/compare/v0.1.0...v0.1.1) - 2026-02-15
+### Other Changes
+- publish-releaseジョブをgh CLIに簡素化 by @na3shkw in https://github.com/na3shkw/zaim-matsui-auto-sync/pull/18
+- Revert "Release for v0.1.1" by @na3shkw in https://github.com/na3shkw/zaim-matsui-auto-sync/pull/21
+- セキュリティとプロビナンスを改善したGitHub Actionsワークフローのリファクタリング by @na3shkw in https://github.com/na3shkw/zaim-matsui-auto-sync/pull/22
+
 ## [v0.1.0](https://github.com/na3shkw/zaim-matsui-auto-sync/commits/v0.1.0) - 2026-02-15
 ### New Features 🎉
 - tagprとGHCRを使った自動リリース機能を追加・Dockerコンテナのユーザー権限管理改善 by @na3shkw in https://github.com/na3shkw/zaim-matsui-auto-sync/pull/12
