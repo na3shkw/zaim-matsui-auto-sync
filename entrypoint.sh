@@ -29,7 +29,7 @@ if [ -n "$PUID" ] || [ -n "$PGID" ]; then
         echo "Changing node user UID:GID to $PUID:$PGID"
         groupmod -o -g "$PGID" node
         usermod -o -u "$PUID" node
-        chown -R node:node /app /home/node
+        chown -R node:node /home/node/.config
     fi
 fi
 
@@ -50,7 +50,7 @@ case "$APP_COMMAND" in
         exec gosu node ./dist/commands/zaim/index.js "$@"
         ;;
     "login-google")
-        chromium=$(find /home/node/.cache/ms-playwright/ -executable -name chrome -print -quit)
+        chromium=$(find /ms-playwright/ -executable -name chrome -print -quit)
         exec gosu node "$chromium" \
             --user-data-dir="$CHROMIUM_USER_DATA_DIR_GOOGLE" \
             "$@"
