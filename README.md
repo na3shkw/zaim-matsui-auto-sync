@@ -33,7 +33,7 @@ Google メッセージへのアクセスをスムーズに行うため、事前�
     ```bash
     docker compose run --rm -e APP_COMMAND='login-google' -e APP_ARGS='https://www.google.com' --publish <ホスト側 VNC ポート>:5901 app
     ```
-2. `localhost:<ホスト側 VNC ポート>` に VNC 接続する。接続ユーザーは `appuser` で認証はなし。
+2. `localhost:<ホスト側 VNC ポート>` に VNC 接続する。認証はなし。
 3. 手動操作で Google にログインする。
 4. ログイン後、https://messages.google.com/web/ に遷移してデバイスのペア設定を行う。
 5. Chromium を閉じる。
