@@ -1,5 +1,9 @@
 # Changelog
 
+## [v0.1.2](https://github.com/na3shkw/zaim-matsui-auto-sync/compare/v0.1.1...v0.1.2) - 2026-02-21
+### Other Changes
+- docs: READMEのVNC接続手順を簡略化 by @na3shkw in https://github.com/na3shkw/zaim-matsui-auto-sync/pull/23
+
 ## [v0.1.1](https://github.com/na3shkw/zaim-matsui-auto-sync/compare/v0.1.0...v0.1.1) - 2026-02-15
 ### Other Changes
 - publish-releaseジョブをgh CLIに簡素化 by @na3shkw in https://github.com/na3shkw/zaim-matsui-auto-sync/pull/18
