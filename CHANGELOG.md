@@ -1,5 +1,16 @@
 # Changelog
 
+## [v0.1.2](https://github.com/na3shkw/zaim-matsui-auto-sync/compare/v0.1.1...v0.1.2) - 2026-03-09
+### Other Changes
+- docs: READMEのVNC接続手順を簡略化 by @na3shkw in https://github.com/na3shkw/zaim-matsui-auto-sync/pull/23
+- build(deps): bump rollup from 4.53.2 to 4.59.0 by @dependabot[bot] in https://github.com/na3shkw/zaim-matsui-auto-sync/pull/25
+- attest actionをv4に更新し、新しいアクション名を適用 by @na3shkw in https://github.com/na3shkw/zaim-matsui-auto-sync/pull/27
+- build(deps): bump docker/metadata-action from 5 to 6 by @dependabot[bot] in https://github.com/na3shkw/zaim-matsui-auto-sync/pull/30
+- build(deps): bump docker/build-push-action from 6 to 7 by @dependabot[bot] in https://github.com/na3shkw/zaim-matsui-auto-sync/pull/28
+- build(deps): bump docker/setup-buildx-action from 3 to 4 by @dependabot[bot] in https://github.com/na3shkw/zaim-matsui-auto-sync/pull/29
+- build(deps): bump docker/setup-qemu-action from 3 to 4 by @dependabot[bot] in https://github.com/na3shkw/zaim-matsui-auto-sync/pull/31
+- build(deps): bump docker/login-action from 3 to 4 by @dependabot[bot] in https://github.com/na3shkw/zaim-matsui-auto-sync/pull/32
+
 ## [v0.1.1](https://github.com/na3shkw/zaim-matsui-auto-sync/compare/v0.1.0...v0.1.1) - 2026-02-15
 ### Other Changes
 - publish-releaseジョブをgh CLIに簡素化 by @na3shkw in https://github.com/na3shkw/zaim-matsui-auto-sync/pull/18
