@@ -1,5 +1,9 @@
 # Changelog
 
+## [v0.2.0](https://github.com/na3shkw/zaim-matsui-auto-sync/compare/v0.1.2...v0.2.0) - 2026-03-10
+### Other Changes
+- 投資信託ログインフローの更新 by @na3shkw in https://github.com/na3shkw/zaim-matsui-auto-sync/pull/34
+
 ## [v0.1.2](https://github.com/na3shkw/zaim-matsui-auto-sync/compare/v0.1.1...v0.1.2) - 2026-03-09
 ### Other Changes
 - docs: READMEのVNC接続手順を簡略化 by @na3shkw in https://github.com/na3shkw/zaim-matsui-auto-sync/pull/23
