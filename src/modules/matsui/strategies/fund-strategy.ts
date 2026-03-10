@@ -16,27 +16,20 @@ const { CHROMIUM_USER_DATA_DIR_MATSUI, MATSUI_LOGIN_ID, MATSUI_PASSWORD } = proc
 export class FundStrategy implements AssetScrapingStrategy<Position> {
   async isSessionValid(page: Page): Promise<boolean> {
     try {
-      const response = await page.goto(MatsuiPage.home, { timeout: 10000 });
-      const url = response?.url();
+      await page.goto(MatsuiPage.tradeMemberHome, { timeout: 10000 });
+      const url = page.url();
 
-      // メンテナンス画面の場合
-      if (url && MatsuiPage.fundMente.indexOf(url) !== -1) {
+      // メンテナンスページにリダイレクトされた場合
+      if (url.includes(MatsuiPage.tradeMente)) {
         throw new Error("メンテナンス中のため同期を実行できません。");
       }
 
-      try {
-        // モーダルが表示されるまで待機（最大10秒）
-        await page.waitForSelector(".modal-container.dialog.error", {
-          timeout: 10000,
-          state: "visible",
-        });
-      } catch {
-        return true;
-      }
+      // ログインページにリダイレクトされていないかチェック
+      return !url.includes("/login");
     } catch (error) {
       logger.error(error, "セッション有効性チェック中にエラーが発生しました。");
+      return false;
     }
-    return false;
   }
 
   async login(page: Page): Promise<void> {
@@ -44,57 +37,97 @@ export class FundStrategy implements AssetScrapingStrategy<Position> {
       throw new Error("環境変数 MATSUI_LOGIN_ID または MATSUI_PASSWORD が設定されていません。");
     }
 
-    const response = await page.goto(MatsuiPage.login);
-    const url = response?.url();
-
-    // メンテナンス画面にリダイレクトされた場合
-    if (url && MatsuiPage.fundMente.indexOf(url) !== -1) {
-      throw new Error("メンテナンス中のため同期を実行できません。");
-    }
-
+    // ログインページに移動
+    await page.goto(MatsuiPage.tradeLogin);
     await page.waitForLoadState("networkidle");
 
     // ログイン情報を入力
-    await page.getByLabel("ログインID").fill(MATSUI_LOGIN_ID);
-    await page.getByLabel("パスワード").fill(MATSUI_PASSWORD);
+    await page.fill("#login-id", MATSUI_LOGIN_ID);
+    await page.fill("#login-password", MATSUI_PASSWORD);
+    logger.info("ログイン情報を入力しました。");
 
-    // ページ遷移を待機しながらクリック
-    await Promise.all([
-      page.waitForURL("**", { timeout: 10000 }),
-      page.getByRole("button", { name: "ログイン" }).click(),
-    ]);
-    logger.info("ログインフォームを送信しました。");
+    // ログインボタンをクリック
+    const loginButton = page.locator("button").filter({ hasText: "ログイン" });
+    await Promise.all([page.waitForURL("**", { timeout: 10000 }), loginButton.click()]);
+    logger.info("ログインボタンをクリックしました。");
 
+    // メンテナンスページにリダイレクトされた場合
+    const currentUrl = page.url();
+    if (currentUrl.includes(MatsuiPage.tradeMente)) {
+      throw new Error("メンテナンス中のため同期を実行できません。");
+    }
+
+    // 認証コードを入力
     const { authenticationCode } = await getAuthenticationCode();
-    await page.fill(".inputAuthNumArea input[type='text']", authenticationCode);
+    await page.fill('input[name="auth-number"]', authenticationCode);
     logger.info("認証コードを入力しました。");
 
-    // 少し待ってから自動遷移したかどうかを確認
-    await page.waitForTimeout(1000);
-
-    // 認証ボタンがまだ存在するかチェック（自動遷移しなかった場合）
-    const authButton = page.getByRole("button", { name: "認証する" });
-    const buttonExists = (await authButton.count()) > 0;
-
-    if (buttonExists) {
-      await authButton.click();
-      logger.info("自動遷移しなかったため、認証ボタンをクリックしました。");
-    } else {
-      logger.info("認証コード入力により自動遷移しました。");
-    }
+    // 認証ボタンをクリック
+    const authButton = page.locator("#auth-btn");
+    await Promise.all([
+      page.waitForURL(MatsuiPage.tradeMemberHome, { timeout: 10000 }),
+      authButton.click(),
+    ]);
+    logger.info("認証ボタンをクリックしました。");
 
     // ログイン成功後にCookieを保存
     await backupCookies(page, CHROMIUM_USER_DATA_DIR_MATSUI!);
   }
 
   async prepareTargetPage(page: Page): Promise<Page> {
-    await page.goto(MatsuiPage.position);
+    // 投資信託メニューをクリック
+    const mutualFundMenuLink = page
+      .locator('#common-header [data-page="mutual-fund-top"]')
+      .locator("visible=true")
+      .first();
+    await mutualFundMenuLink.click();
+    logger.info("「投資信託」メニューをクリックしました。");
+
+    // 起動ボタンをクリック（別画面に遷移）
+    const activateButton = page.locator(
+      '[data-page="activate-mutual-fund-screen"] .btn-menu-activate-mutual-fund-screen'
+    );
+    await activateButton.waitFor({ state: "visible", timeout: 10000 });
+    await activateButton.click();
+    logger.info("投資信託サイトの起動ボタンをクリックしました。");
+
+    // 画面遷移の待機
+    await page.waitForLoadState("networkidle");
+
+    // iframe内の「起動する」画像をクリックして新しいタブが開くのを待つ
+    const iframe = page.frameLocator("#net-stock-contents");
+    logger.info("iframeの読み込みを待機中...");
+
+    const ctFrame = iframe.frameLocator('frame[name="CT"]');
+    logger.info("CTフレームを取得しました。");
+
+    // frame内の起動ボタン (name="kidouButton"のimg要素の親a要素) を取得
+    const launchButton = ctFrame.locator('a:has(img[name="kidouButton"])');
+    await launchButton.waitFor({ state: "visible", timeout: 30000 });
+    logger.info("起動ボタンが表示されました。");
+
+    // 起動ボタンをクリックして新しいタブが開くのを待つ
+    const [newPage] = await Promise.all([
+      page.context().waitForEvent("page"),
+      launchButton.click(),
+    ]);
+    logger.info("投資信託サイトの起動ボタンをクリックしました。");
+
+    await newPage.waitForLoadState("networkidle");
+    logger.info("投資信託サイトが起動しました。");
+
+    // 既存の残高照会ページ遷移処理
+    await newPage.goto(MatsuiPage.position);
+    await newPage.waitForLoadState("networkidle");
+    logger.info("残高照会ページに遷移しました。");
+
     // メインのコンテナが表示され、残高の読み込みが完了する（「※該当するデータがありません。」の要素が消える）まで待機する
-    await page.locator("#currentPortfolioInquiry").waitFor({ state: "visible", timeout: 30000 });
-    await page
+    await newPage.locator("#currentPortfolioInquiry").waitFor({ state: "visible", timeout: 30000 });
+    await newPage
       .locator("#currentPortfolioInquiry .noRecord")
       .waitFor({ state: "detached", timeout: 30000 });
-    return page;
+
+    return newPage;
   }
 
   async scrapeAssets(page: Page): Promise<Position> {
