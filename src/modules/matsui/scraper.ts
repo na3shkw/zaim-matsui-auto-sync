@@ -1,4 +1,4 @@
-import type { Page } from "playwright";
+import type { BrowserContext, Page } from "playwright";
 import { logger } from "../logger.js";
 import { getStorageStatePath, openBrowser, saveStorageState } from "./browser.js";
 import type { AssetScrapingStrategy } from "./strategies/strategy-interface.js";
@@ -10,7 +10,7 @@ const { CHROMIUM_USER_DATA_DIR_MATSUI, HEADLESS } = process.env;
  */
 export class MatsuiScraper {
   private strategy: AssetScrapingStrategy<unknown> | null = null;
-  private browserContext: import("playwright").BrowserContext | null = null;
+  private browserContext: BrowserContext | null = null;
   private page: Page | null = null;
 
   /**
