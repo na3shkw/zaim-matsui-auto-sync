@@ -24,8 +24,16 @@ export async function openBrowser(
       // headlessモードで起動した際のクラッシュを回避するため
       "--single-process",
     ],
-    storageState: storageStatePath,
   });
+
+  if (storageStatePath) {
+    const state = JSON.parse(fs.readFileSync(storageStatePath, "utf-8")) as {
+      cookies?: Parameters<BrowserContext["addCookies"]>[0];
+    };
+    if (state.cookies && state.cookies.length > 0) {
+      await browserContext.addCookies(state.cookies);
+    }
+  }
 
   // ランダムに表示されるポップアップスクリプトをブロック
   await browserContext.route(/\/Rtoaster(\.Popup)?\.js(\?.*)?$/, (route) =>
