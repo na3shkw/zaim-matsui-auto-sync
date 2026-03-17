@@ -1,6 +1,6 @@
 import type { Page } from "playwright";
 import { logger } from "../logger.js";
-import { backupCookies, openBrowser, restoreCookies } from "./browser.js";
+import { getStorageStatePath, openBrowser, saveStorageState } from "./browser.js";
 import type { AssetScrapingStrategy } from "./strategies/strategy-interface.js";
 
 const { CHROMIUM_USER_DATA_DIR_MATSUI, HEADLESS } = process.env;
@@ -10,6 +10,7 @@ const { CHROMIUM_USER_DATA_DIR_MATSUI, HEADLESS } = process.env;
  */
 export class MatsuiScraper {
   private strategy: AssetScrapingStrategy<unknown> | null = null;
+  private browserContext: import("playwright").BrowserContext | null = null;
   private page: Page | null = null;
 
   /**
@@ -27,16 +28,17 @@ export class MatsuiScraper {
       throw new Error("環境変数 CHROMIUM_USER_DATA_DIR_MATSUI が設定されていません。");
     }
 
+    const storageStatePath = getStorageStatePath(CHROMIUM_USER_DATA_DIR_MATSUI);
     const { browserContext, page } = await openBrowser(
       CHROMIUM_USER_DATA_DIR_MATSUI,
-      HEADLESS === "true"
+      HEADLESS === "true",
+      storageStatePath
     );
 
-    // Cookie復元を試行
-    const cookiesRestored = await restoreCookies(browserContext, CHROMIUM_USER_DATA_DIR_MATSUI);
-    if (cookiesRestored) {
-      logger.info("保存されているCookieを復元しました。");
+    if (storageStatePath) {
+      logger.info("保存されているストレージ状態を復元しました。");
     }
+    this.browserContext = browserContext;
     this.page = page;
   }
 
@@ -90,18 +92,17 @@ export class MatsuiScraper {
    * ブラウザを閉じてCookieを保存する
    */
   async close(): Promise<void> {
-    if (!this.page) {
+    if (!this.browserContext) {
       return;
     }
     try {
-      await backupCookies(this.page, CHROMIUM_USER_DATA_DIR_MATSUI!);
+      await saveStorageState(this.browserContext, CHROMIUM_USER_DATA_DIR_MATSUI!);
     } catch (error) {
-      logger.error(error, "スクレイピング後のCookie保存中にエラーが発生しました。");
+      logger.error(error, "スクレイピング後のストレージ状態の保存中にエラーが発生しました。");
     }
-    const browserContext = this.page.context();
     try {
       logger.info("ブラウザコンテキストを閉じています。");
-      await browserContext.close();
+      await this.browserContext.close();
       logger.info("ブラウザコンテキストを閉じました。");
     } catch (error) {
       logger.error(error, "ブラウザコンテキストのクローズ中にエラーが発生しました。");
