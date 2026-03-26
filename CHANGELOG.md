@@ -1,5 +1,9 @@
 # Changelog
 
+## [v0.2.1](https://github.com/na3shkw/zaim-matsui-auto-sync/compare/v0.2.0...v0.2.1) - 2026-03-26
+### Other Changes
+- build(deps): bump picomatch from 4.0.3 to 4.0.4 by @dependabot[bot] in https://github.com/na3shkw/zaim-matsui-auto-sync/pull/37
+
 ## [v0.2.0](https://github.com/na3shkw/zaim-matsui-auto-sync/compare/v0.1.2...v0.2.0) - 2026-03-10
 ### Other Changes
 - 投資信託ログインフローの更新 by @na3shkw in https://github.com/na3shkw/zaim-matsui-auto-sync/pull/34
