@@ -91,9 +91,6 @@ export class FundStrategy implements AssetScrapingStrategy<Position> {
     await activateButton.click();
     logger.info("投資信託サイトの起動ボタンをクリックしました。");
 
-    // 画面遷移の待機
-    await page.waitForLoadState("networkidle");
-
     // iframe内の「起動する」画像をクリックして新しいタブが開くのを待つ
     const iframe = page.frameLocator("#net-stock-contents");
     logger.info("iframeの読み込みを待機中...");
