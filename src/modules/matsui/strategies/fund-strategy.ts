@@ -47,7 +47,7 @@ export class FundStrategy implements AssetScrapingStrategy<Position> {
     logger.info("ログイン情報を入力しました。");
 
     // ログインボタンをクリック
-    const loginButton = page.locator("button").filter({ hasText: "ログイン" });
+    const loginButton = page.locator('#login-id-area button[type="submit"]');
     await Promise.all([page.waitForURL("**", { timeout: 10000 }), loginButton.click()]);
     logger.info("ログインボタンをクリックしました。");
 
