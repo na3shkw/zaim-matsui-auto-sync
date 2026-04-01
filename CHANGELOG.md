@@ -1,5 +1,11 @@
 # Changelog
 
+## [v0.3.0](https://github.com/na3shkw/zaim-matsui-auto-sync/compare/v0.2.1...v0.3.0) - 2026-04-01
+### New Features 🎉
+- クッキー管理をPlaywrightのstorageState APIを使用するようにリファクタリング by @na3shkw in https://github.com/na3shkw/zaim-matsui-auto-sync/pull/36
+### Bug Fixes 🐛
+- fix: ログインページのボタン特定エラーとnetworkidleタイムアウトを修正 by @na3shkw in https://github.com/na3shkw/zaim-matsui-auto-sync/pull/39
+
 ## [v0.2.1](https://github.com/na3shkw/zaim-matsui-auto-sync/compare/v0.2.0...v0.2.1) - 2026-03-26
 ### Other Changes
 - build(deps): bump picomatch from 4.0.3 to 4.0.4 by @dependabot[bot] in https://github.com/na3shkw/zaim-matsui-auto-sync/pull/37
