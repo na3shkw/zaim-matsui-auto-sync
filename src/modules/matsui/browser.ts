@@ -2,6 +2,7 @@ import fs from "fs";
 import path from "path";
 import type { BrowserContext } from "playwright";
 import { chromium } from "playwright";
+import { logger } from "../logger.js";
 
 /**
  * ユーザーデータディレクトリを指定してブラウザを開く
@@ -27,11 +28,22 @@ export async function openBrowser(
   });
 
   if (storageStatePath) {
-    const state = JSON.parse(fs.readFileSync(storageStatePath, "utf-8")) as {
-      cookies?: Parameters<BrowserContext["addCookies"]>[0];
-    };
-    if (state.cookies && state.cookies.length > 0) {
-      await browserContext.addCookies(state.cookies);
+    // launchPersistentContext は storageState オプションをサポートしないため、
+    // addCookies() で Cookie のみ復元する。
+    // localStorage・sessionStorage はユーザーデータディレクトリのプロファイルに
+    // 残るため、実用上の問題は生じない。
+    try {
+      const state = JSON.parse(fs.readFileSync(storageStatePath, "utf-8")) as {
+        cookies?: Parameters<BrowserContext["addCookies"]>[0];
+      };
+      if (state.cookies && state.cookies.length > 0) {
+        await browserContext.addCookies(state.cookies);
+      }
+    } catch (e) {
+      logger.warn(
+        { err: e },
+        "storage-state.json の読み込みに失敗しました。Cookieなしで続行します。"
+      );
     }
   }
 
