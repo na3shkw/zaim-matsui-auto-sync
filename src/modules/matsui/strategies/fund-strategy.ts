@@ -39,7 +39,7 @@ export class FundStrategy implements AssetScrapingStrategy<Position> {
 
     // ログインページに移動
     await page.goto(MatsuiPage.tradeLogin);
-    await page.waitForLoadState("networkidle");
+    await page.locator("#login-id").waitFor({ state: "visible" });
 
     // ログイン情報を入力
     await page.fill("#login-id", MATSUI_LOGIN_ID);
