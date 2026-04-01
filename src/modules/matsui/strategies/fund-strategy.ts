@@ -4,7 +4,7 @@ import type { Position } from "../../../types/matsui.js";
 import { logger } from "../../logger.js";
 import { parseNumber } from "../../utils.js";
 import { getAuthenticationCode } from "../auth.js";
-import { backupCookies } from "../browser.js";
+import { saveStorageState } from "../browser.js";
 import { MatsuiPage } from "../page.js";
 import type { AssetScrapingStrategy } from "./strategy-interface.js";
 
@@ -70,8 +70,8 @@ export class FundStrategy implements AssetScrapingStrategy<Position> {
     ]);
     logger.info("認証ボタンをクリックしました。");
 
-    // ログイン成功後にCookieを保存
-    await backupCookies(page, CHROMIUM_USER_DATA_DIR_MATSUI!);
+    // ログイン成功後にストレージ状態を保存
+    await saveStorageState(page.context(), CHROMIUM_USER_DATA_DIR_MATSUI!);
   }
 
   async prepareTargetPage(page: Page): Promise<Page> {
