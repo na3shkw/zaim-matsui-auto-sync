@@ -39,7 +39,7 @@ export class FundStrategy implements AssetScrapingStrategy<Position> {
 
     // ログインページに移動
     await page.goto(MatsuiPage.tradeLogin);
-    await page.waitForLoadState("networkidle");
+    await page.locator("#login-id").waitFor({ state: "visible" });
 
     // ログイン情報を入力
     await page.fill("#login-id", MATSUI_LOGIN_ID);
@@ -47,7 +47,7 @@ export class FundStrategy implements AssetScrapingStrategy<Position> {
     logger.info("ログイン情報を入力しました。");
 
     // ログインボタンをクリック
-    const loginButton = page.locator("button").filter({ hasText: "ログイン" });
+    const loginButton = page.locator('#login-id-area button[type="submit"]');
     await Promise.all([page.waitForURL("**", { timeout: 10000 }), loginButton.click()]);
     logger.info("ログインボタンをクリックしました。");
 
@@ -90,9 +90,6 @@ export class FundStrategy implements AssetScrapingStrategy<Position> {
     await activateButton.waitFor({ state: "visible", timeout: 10000 });
     await activateButton.click();
     logger.info("投資信託サイトの起動ボタンをクリックしました。");
-
-    // 画面遷移の待機
-    await page.waitForLoadState("networkidle");
 
     // iframe内の「起動する」画像をクリックして新しいタブが開くのを待つ
     const iframe = page.frameLocator("#net-stock-contents");
