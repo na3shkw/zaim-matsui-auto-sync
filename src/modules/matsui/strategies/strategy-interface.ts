@@ -9,7 +9,7 @@ export interface AssetScrapingStrategy<T> {
    * @param page PlaywrightのPageオブジェクト
    * @returns スクレイピングに使用するPageオブジェクト
    */
-  prepareTargetPage?(page: Page): Promise<Page>;
+  prepareTargetPage(page: Page): Promise<Page>;
 
   /**
    * 資産データをスクレイピングする

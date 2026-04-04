@@ -24,7 +24,7 @@ export class PasswordLoginMethod implements MatsuiLoginMethod {
     }
   }
 
-  async navigateToHome(page: Page): Promise<void> {
+  private async navigateToHome(page: Page): Promise<void> {
     await page.goto(MatsuiPage.tradeMemberHome, { timeout: 10000 });
     if (page.url().includes(MatsuiPage.tradeMente)) {
       throw new Error("メンテナンス中のため同期を実行できません。");

@@ -61,16 +61,6 @@ export class MatsuiScraper {
   }
 
   /**
-   * スクレイピングの開始地点となるページに遷移する
-   */
-  async navigateToHome(): Promise<void> {
-    if (!this.loginMethod || !this.page) {
-      throw new Error("ログイン方式またはページが初期化されていません。");
-    }
-    await this.loginMethod.navigateToHome(this.page);
-  }
-
-  /**
    * 認証処理を実行する（セッション確認→必要に応じてログイン）
    */
   async authenticate(): Promise<void> {
@@ -99,12 +89,7 @@ export class MatsuiScraper {
       throw new Error("スクレイピング戦略またはページが初期化されていません。");
     }
 
-    // スクレイピング対象のページを準備
-    let targetPage = this.page;
-    if (this.strategy.prepareTargetPage) {
-      targetPage = await this.strategy.prepareTargetPage(this.page);
-    }
-
+    const targetPage = await this.strategy.prepareTargetPage(this.page);
     return (await this.strategy.scrapeAssets(targetPage)) as T;
   }
 

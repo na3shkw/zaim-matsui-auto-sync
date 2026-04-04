@@ -58,7 +58,6 @@ export class MatsuiZaimSyncService {
       for (const [strategyType, _] of strategyGroups) {
         try {
           logger.info(`戦略 ${strategyType} の処理を開始します。`);
-          await this.scraper.navigateToHome();
           const strategy = StrategyFactory.create(strategyType);
           this.scraper.setStrategy(strategy);
           logger.info(`戦略 ${strategyType} のスクレイピングを開始します。`);
