@@ -16,4 +16,10 @@ export interface MatsuiLoginMethod {
    * @param page PlaywrightのPageオブジェクト
    */
   login(page: Page): Promise<void>;
+
+  /**
+   * スクレイピングの開始地点となるページに遷移する
+   * @param page PlaywrightのPageオブジェクト
+   */
+  navigateToHome(page: Page): Promise<void>;
 }

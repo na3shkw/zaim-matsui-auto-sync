@@ -53,15 +53,14 @@ export class MatsuiZaimSyncService {
       const scrapedDataMap = new Map<StrategyType, any>();
 
       this.scraper.setLoginMethod(this.loginMethod);
+      await this.scraper.authenticate();
 
       for (const [strategyType, _] of strategyGroups) {
         try {
           logger.info(`戦略 ${strategyType} の処理を開始します。`);
+          await this.scraper.navigateToHome();
           const strategy = StrategyFactory.create(strategyType);
           this.scraper.setStrategy(strategy);
-          logger.info(`戦略 ${strategyType} の認証を開始します。`);
-          await this.scraper.authenticate();
-          logger.info(`戦略 ${strategyType} の認証が完了しました。`);
           logger.info(`戦略 ${strategyType} のスクレイピングを開始します。`);
           const data = await this.scraper.scrape();
           logger.info(`戦略 ${strategyType} のスクレイピングが完了しました。`);

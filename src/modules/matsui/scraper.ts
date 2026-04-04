@@ -61,6 +61,16 @@ export class MatsuiScraper {
   }
 
   /**
+   * スクレイピングの開始地点となるページに遷移する
+   */
+  async navigateToHome(): Promise<void> {
+    if (!this.loginMethod || !this.page) {
+      throw new Error("ログイン方式またはページが初期化されていません。");
+    }
+    await this.loginMethod.navigateToHome(this.page);
+  }
+
+  /**
    * 認証処理を実行する（セッション確認→必要に応じてログイン）
    */
   async authenticate(): Promise<void> {
