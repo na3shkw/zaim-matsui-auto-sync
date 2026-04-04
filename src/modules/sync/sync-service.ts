@@ -4,6 +4,7 @@ import path from "path";
 import type { Page } from "playwright";
 import type { AccountConfig, AppConfig, MatsuiConfig, StrategyType } from "../config.js";
 import { logger } from "../logger.js";
+import { PasswordLoginMethod } from "../matsui/login-methods/password-login.js";
 import type { MatsuiScraper } from "../matsui/scraper.js";
 import { StrategyFactory } from "../matsui/strategies/index.js";
 import type { Zaim } from "../zaim/client.js";
@@ -49,6 +50,9 @@ export class MatsuiZaimSyncService {
       // 各戦略を実行してデータ取得
       logger.info("資産評価額を取得します。");
       const scrapedDataMap = new Map<StrategyType, any>();
+
+      const loginMethod = new PasswordLoginMethod();
+      this.scraper.setLoginMethod(loginMethod);
 
       for (const [strategyType, _] of strategyGroups) {
         try {
