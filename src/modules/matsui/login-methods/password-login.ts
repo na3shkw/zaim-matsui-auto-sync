@@ -22,6 +22,9 @@ export class PasswordLoginMethod implements MatsuiLoginMethod {
 
       return !url.includes("/login");
     } catch (error) {
+      if (error instanceof Error && error.message.includes("メンテナンス")) {
+        throw error;
+      }
       logger.error(error, "セッション有効性チェック中にエラーが発生しました。");
       return false;
     }
