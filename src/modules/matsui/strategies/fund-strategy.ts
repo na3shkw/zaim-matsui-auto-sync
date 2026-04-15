@@ -11,6 +11,8 @@ import type { AssetScrapingStrategy } from "./strategy-interface.js";
  */
 export class FundStrategy implements AssetScrapingStrategy<Position> {
   async prepareTargetPage(page: Page): Promise<Page> {
+    await page.goto(MatsuiPage.tradeMemberHome);
+
     // 投資信託メニューをクリック
     const mutualFundMenuLink = page
       .locator('#common-header [data-page="mutual-fund-top"]')

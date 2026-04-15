@@ -13,20 +13,21 @@ const { CHROMIUM_USER_DATA_DIR_MATSUI, MATSUI_LOGIN_ID, MATSUI_PASSWORD } = proc
 export class PasswordLoginMethod implements MatsuiLoginMethod {
   async isSessionValid(page: Page): Promise<boolean> {
     try {
-      await page.goto(MatsuiPage.tradeMemberHome, { timeout: 10000 });
-      const url = page.url();
-
-      if (url.includes(MatsuiPage.tradeMente)) {
-        throw new Error("メンテナンス中のため同期を実行できません。");
-      }
-
-      return !url.includes("/login");
+      await this.navigateToHome(page);
+      return !page.url().includes("/login");
     } catch (error) {
       if (error instanceof Error && error.message.includes("メンテナンス")) {
         throw error;
       }
       logger.error(error, "セッション有効性チェック中にエラーが発生しました。");
       return false;
+    }
+  }
+
+  private async navigateToHome(page: Page): Promise<void> {
+    await page.goto(MatsuiPage.tradeMemberHome, { timeout: 10000 });
+    if (page.url().includes(MatsuiPage.tradeMente)) {
+      throw new Error("メンテナンス中のため同期を実行できません。");
     }
   }
 

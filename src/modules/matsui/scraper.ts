@@ -89,12 +89,7 @@ export class MatsuiScraper {
       throw new Error("スクレイピング戦略またはページが初期化されていません。");
     }
 
-    // スクレイピング対象のページを準備
-    let targetPage = this.page;
-    if (this.strategy.prepareTargetPage) {
-      targetPage = await this.strategy.prepareTargetPage(this.page);
-    }
-
+    const targetPage = await this.strategy.prepareTargetPage(this.page);
     return (await this.strategy.scrapeAssets(targetPage)) as T;
   }
 

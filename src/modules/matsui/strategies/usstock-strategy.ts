@@ -10,6 +10,8 @@ import type { AssetScrapingStrategy } from "./strategy-interface.js";
  */
 export class UsStockStrategy implements AssetScrapingStrategy<UsStockAsset> {
   async prepareTargetPage(page: Page): Promise<Page> {
+    await page.goto(MatsuiPage.tradeMemberHome);
+
     // ヘッダの「米国株」メニューから辿るとブラウザの実行環境起因でエラー画面になってしまうため、資産状況ページから辿る。
 
     // 資産状況ページに遷移
