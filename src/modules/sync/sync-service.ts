@@ -4,6 +4,7 @@ import path from "path";
 import type { Page } from "playwright";
 import type { AccountConfig, AppConfig, MatsuiConfig, StrategyType } from "../config.js";
 import { logger } from "../logger.js";
+import type { MatsuiLoginMethod } from "../matsui/login-methods/login-method.js";
 import type { MatsuiScraper } from "../matsui/scraper.js";
 import { StrategyFactory } from "../matsui/strategies/index.js";
 import type { Zaim } from "../zaim/client.js";
@@ -24,6 +25,7 @@ export interface LastTotalAmount {
 export class MatsuiZaimSyncService {
   constructor(
     private scraper: MatsuiScraper,
+    private loginMethod: MatsuiLoginMethod,
     private totalAmountRepo: TotalAmountRepository,
     private zaimClient: Zaim
   ) {}
@@ -49,6 +51,8 @@ export class MatsuiZaimSyncService {
       // 各戦略を実行してデータ取得
       logger.info("資産評価額を取得します。");
       const scrapedDataMap = new Map<StrategyType, any>();
+
+      this.scraper.setLoginMethod(this.loginMethod);
 
       for (const [strategyType, _] of strategyGroups) {
         try {

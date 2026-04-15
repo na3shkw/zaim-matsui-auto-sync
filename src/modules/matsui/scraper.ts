@@ -1,6 +1,7 @@
 import type { BrowserContext, Page } from "playwright";
 import { logger } from "../logger.js";
 import { getStorageStatePath, openBrowser, saveStorageState } from "./browser.js";
+import type { MatsuiLoginMethod } from "./login-methods/login-method.js";
 import type { AssetScrapingStrategy } from "./strategies/strategy-interface.js";
 
 const { CHROMIUM_USER_DATA_DIR_MATSUI, HEADLESS } = process.env;
@@ -9,6 +10,7 @@ const { CHROMIUM_USER_DATA_DIR_MATSUI, HEADLESS } = process.env;
  * 松井証券のスクレイピングを管理するクラス
  */
 export class MatsuiScraper {
+  private loginMethod: MatsuiLoginMethod | null = null;
   private strategy: AssetScrapingStrategy<unknown> | null = null;
   private browserContext: BrowserContext | null = null;
   private page: Page | null = null;
@@ -43,6 +45,14 @@ export class MatsuiScraper {
   }
 
   /**
+   * ログイン方式を設定する
+   * @param loginMethod 設定するログイン方式
+   */
+  setLoginMethod(loginMethod: MatsuiLoginMethod): void {
+    this.loginMethod = loginMethod;
+  }
+
+  /**
    * スクレイピング戦略を設定する
    * @param strategy 設定する戦略
    */
@@ -54,16 +64,16 @@ export class MatsuiScraper {
    * 認証処理を実行する（セッション確認→必要に応じてログイン）
    */
   async authenticate(): Promise<void> {
-    if (!this.strategy || !this.page) {
-      throw new Error("スクレイピング戦略またはページが初期化されていません。");
+    if (!this.loginMethod || !this.page) {
+      throw new Error("ログイン方式またはページが初期化されていません。");
     }
 
     logger.info("セッションの有効性をチェックします。");
-    const sessionValid = await this.strategy.isSessionValid(this.page);
+    const sessionValid = await this.loginMethod.isSessionValid(this.page);
 
     if (!sessionValid) {
       logger.info("セッションが無効なため、ログインを実行します。");
-      await this.strategy.login(this.page);
+      await this.loginMethod.login(this.page);
       logger.info("ログインが完了しました。");
     } else {
       logger.info("既存のセッションを使用します。");

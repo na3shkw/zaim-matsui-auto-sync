@@ -2,6 +2,7 @@
 import { Command } from "commander";
 import { loadConfig } from "../modules/config.js";
 import { configureLogger, logger, MatsuiScraper, Zaim } from "../modules/index.js";
+import { PasswordLoginMethod } from "../modules/matsui/login-methods/password-login.js";
 import { MatsuiZaimSyncService } from "../modules/sync/sync-service.js";
 import { TotalAmountRepository } from "../modules/sync/total-amount-repository.js";
 
@@ -27,9 +28,10 @@ program
 
       // 依存性の注入
       const scraper = new MatsuiScraper();
+      const loginMethod = new PasswordLoginMethod();
       const totalAmountRepo = new TotalAmountRepository(ZAIM_TOTAL_AMOUNT_FILE);
       const zaimClient = new Zaim();
-      const syncService = new MatsuiZaimSyncService(scraper, totalAmountRepo, zaimClient);
+      const syncService = new MatsuiZaimSyncService(scraper, loginMethod, totalAmountRepo, zaimClient);
 
       // 同期実行
       await syncService.sync(config, { dryRun: options.dryRun });
