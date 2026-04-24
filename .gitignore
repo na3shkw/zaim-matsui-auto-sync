@@ -138,9 +138,6 @@ dist
 vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
 
-# Gemini Configuration files
-.devcontainer/gemini-config
-
 # Claude Configuration files
 .devcontainer/claude-config
 
