@@ -40,7 +40,7 @@ export class PasskeyLoginMethod implements MatsuiLoginMethod {
 
     // CDP セッションを取得して仮想認証器を設定
     const cdpSession = await page.context().newCDPSession(page);
-    await this.setupVirtualAuthenticator(cdpSession, credential);
+    const { authenticatorId } = await this.setupVirtualAuthenticator(cdpSession, credential);
     logger.info("仮想認証器を設定しました。");
 
     // ログインページに移動
@@ -56,6 +56,9 @@ export class PasskeyLoginMethod implements MatsuiLoginMethod {
     ]);
     logger.info("パスキーでログインしました。");
 
+    // ログイン成功後に signCount をインクリメントして保存
+    await this.updateSignCount(cdpSession, authenticatorId, credential, credentialFile);
+
     // ログイン成功後にストレージ状態を保存
     await saveStorageState(page.context(), CHROMIUM_USER_DATA_DIR_MATSUI!);
   }
@@ -63,7 +66,7 @@ export class PasskeyLoginMethod implements MatsuiLoginMethod {
   private async setupVirtualAuthenticator(
     cdpSession: CDPSession,
     credential: PasskeyCredential,
-  ): Promise<void> {
+  ): Promise<{ authenticatorId: string }> {
     await cdpSession.send("WebAuthn.enable", { enableUI: false });
 
     const { authenticatorId } = await cdpSession.send("WebAuthn.addVirtualAuthenticator", {
@@ -87,5 +90,25 @@ export class PasskeyLoginMethod implements MatsuiLoginMethod {
         signCount: credential.signCount,
       },
     });
+
+    return { authenticatorId };
+  }
+
+  private async updateSignCount(
+    cdpSession: CDPSession,
+    authenticatorId: string,
+    credential: PasskeyCredential,
+    credentialFile: string,
+  ): Promise<void> {
+    const { credentials } = await cdpSession.send("WebAuthn.getCredentials", { authenticatorId });
+    const updated = credentials.find((c) => c.credentialId === credential.credentialId);
+    if (updated) {
+      fs.writeFileSync(
+        credentialFile,
+        JSON.stringify({ ...credential, signCount: updated.signCount }, null, 2),
+        "utf-8",
+      );
+      logger.info("パスキーの資格情報を更新しました。");
+    }
   }
 }
