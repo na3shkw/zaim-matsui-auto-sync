@@ -109,6 +109,8 @@ export class PasskeyLoginMethod implements MatsuiLoginMethod {
         "utf-8",
       );
       logger.info("パスキーの資格情報を更新しました。");
+    } else {
+      logger.warn("仮想認証器からパスキーの資格情報が見つかりませんでした。signCount が更新されていません。");
     }
   }
 }
