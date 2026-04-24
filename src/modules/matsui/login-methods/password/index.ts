@@ -1,9 +1,9 @@
 import type { Page } from "playwright";
-import { logger } from "../../logger.js";
-import { getAuthenticationCode } from "../auth.js";
-import { saveStorageState } from "../browser.js";
-import { MatsuiPage } from "../page.js";
-import type { MatsuiLoginMethod } from "./login-method.js";
+import { logger } from "../../../logger.js";
+import { getAuthenticationCode } from "./authentication-code.js";
+import { saveStorageState } from "../../browser.js";
+import { MatsuiPage } from "../../page.js";
+import type { MatsuiLoginMethod } from "../login-method.js";
 
 const { CHROMIUM_USER_DATA_DIR_MATSUI, MATSUI_LOGIN_ID, MATSUI_PASSWORD } = process.env;
 
