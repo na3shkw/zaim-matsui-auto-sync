@@ -11,26 +11,6 @@ const { CHROMIUM_USER_DATA_DIR_MATSUI, MATSUI_LOGIN_ID, MATSUI_PASSWORD } = proc
  * パスワード認証によるログイン実装
  */
 export class PasswordLoginMethod implements MatsuiLoginMethod {
-  async isSessionValid(page: Page): Promise<boolean> {
-    try {
-      await this.navigateToHome(page);
-      return !page.url().includes("/login");
-    } catch (error) {
-      if (error instanceof Error && error.message.includes("メンテナンス")) {
-        throw error;
-      }
-      logger.error(error, "セッション有効性チェック中にエラーが発生しました。");
-      return false;
-    }
-  }
-
-  private async navigateToHome(page: Page): Promise<void> {
-    await page.goto(MatsuiPage.tradeMemberHome, { timeout: 10000 });
-    if (page.url().includes(MatsuiPage.tradeMente)) {
-      throw new Error("メンテナンス中のため同期を実行できません。");
-    }
-  }
-
   async login(page: Page): Promise<void> {
     if (!MATSUI_LOGIN_ID || !MATSUI_PASSWORD) {
       throw new Error("環境変数 MATSUI_LOGIN_ID または MATSUI_PASSWORD が設定されていません。");
