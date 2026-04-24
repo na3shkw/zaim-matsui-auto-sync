@@ -1,6 +1,6 @@
 import { FundStrategy } from "./fund-strategy.js";
-import { UsStockStrategy } from "./usstock-strategy.js";
 import type { AssetScrapingStrategy } from "./strategy-interface.js";
+import { UsStockStrategy } from "./usstock-strategy.js";
 
 type StrategyName = "fund" | "usstock";
 
@@ -16,8 +16,6 @@ export class StrategyFactory {
         return new FundStrategy();
       case "usstock":
         return new UsStockStrategy();
-      default:
-        throw new Error(`不明な戦略名: ${strategyName}`);
     }
   }
 }
