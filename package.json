@@ -11,13 +11,15 @@
   "type": "module",
   "bin": {
     "sync-matsui-zaim": "./dist/commands/sync-matsui-zaim.js",
+    "register-matsui-passkey": "./dist/commands/register-matsui-passkey.js",
     "zaim-cli": "./dist/commands/zaim/index.js"
   },
   "scripts": {
     "start": "tsx --env-file=.env src/commands/sync-matsui-zaim.ts",
+    "register-passkey": "tsx --env-file=.env src/commands/register-matsui-passkey.ts",
     "zaim-cli": "tsx --env-file=.env src/commands/zaim/index.ts",
     "build": "tsc",
-    "postbuild": "chmod +x dist/commands/sync-matsui-zaim.js dist/commands/zaim/index.js",
+    "postbuild": "chmod +x dist/commands/sync-matsui-zaim.js dist/commands/register-matsui-passkey.js dist/commands/zaim/index.js",
     "build:watch": "tsc --watch",
     "clean": "rm -rf dist",
     "typecheck": "tsc --noEmit",

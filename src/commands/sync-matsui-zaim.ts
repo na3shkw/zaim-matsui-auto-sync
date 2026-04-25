@@ -2,11 +2,12 @@
 import { Command } from "commander";
 import { loadConfig } from "../modules/config.js";
 import { configureLogger, logger, MatsuiScraper, Zaim } from "../modules/index.js";
+import { PasskeyLoginMethod } from "../modules/matsui/login-methods/passkey-login.js";
 import { PasswordLoginMethod } from "../modules/matsui/login-methods/password-login.js";
 import { MatsuiZaimSyncService } from "../modules/sync/sync-service.js";
 import { TotalAmountRepository } from "../modules/sync/total-amount-repository.js";
 
-const { ZAIM_TOTAL_AMOUNT_FILE } = process.env;
+const { ZAIM_TOTAL_AMOUNT_FILE, MATSUI_LOGIN_METHOD } = process.env;
 
 const program = new Command();
 
@@ -28,10 +29,16 @@ program
 
       // 依存性の注入
       const scraper = new MatsuiScraper();
-      const loginMethod = new PasswordLoginMethod();
+      const loginMethod =
+        MATSUI_LOGIN_METHOD === "passkey" ? new PasskeyLoginMethod() : new PasswordLoginMethod();
       const totalAmountRepo = new TotalAmountRepository(ZAIM_TOTAL_AMOUNT_FILE);
       const zaimClient = new Zaim();
-      const syncService = new MatsuiZaimSyncService(scraper, loginMethod, totalAmountRepo, zaimClient);
+      const syncService = new MatsuiZaimSyncService(
+        scraper,
+        loginMethod,
+        totalAmountRepo,
+        zaimClient,
+      );
 
       // 同期実行
       await syncService.sync(config, { dryRun: options.dryRun });

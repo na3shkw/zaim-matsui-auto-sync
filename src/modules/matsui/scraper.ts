@@ -2,6 +2,7 @@ import type { BrowserContext, Page } from "playwright";
 import { logger } from "../logger.js";
 import { getStorageStatePath, openBrowser, saveStorageState } from "./browser.js";
 import type { MatsuiLoginMethod } from "./login-methods/login-method.js";
+import { isSessionValid } from "./session.js";
 import type { AssetScrapingStrategy } from "./strategies/strategy-interface.js";
 
 const { CHROMIUM_USER_DATA_DIR_MATSUI, HEADLESS } = process.env;
@@ -34,7 +35,7 @@ export class MatsuiScraper {
     const { browserContext, page } = await openBrowser(
       CHROMIUM_USER_DATA_DIR_MATSUI,
       HEADLESS === "true",
-      storageStatePath
+      storageStatePath,
     );
 
     if (storageStatePath) {
@@ -69,14 +70,12 @@ export class MatsuiScraper {
     }
 
     logger.info("セッションの有効性をチェックします。");
-    const sessionValid = await this.loginMethod.isSessionValid(this.page);
-
-    if (!sessionValid) {
+    if (await isSessionValid(this.page)) {
+      logger.info("既存のセッションを使用します。");
+    } else {
       logger.info("セッションが無効なため、ログインを実行します。");
       await this.loginMethod.login(this.page);
       logger.info("ログインが完了しました。");
-    } else {
-      logger.info("既存のセッションを使用します。");
     }
   }
 
