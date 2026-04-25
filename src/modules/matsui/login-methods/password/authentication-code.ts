@@ -2,8 +2,8 @@ import type { Dayjs } from "dayjs";
 import dayjs from "dayjs";
 import customParseFormat from "dayjs/plugin/customParseFormat.js";
 import type { BrowserContext, Page } from "playwright";
-import { logger } from "../logger.js";
-import { openBrowser } from "./browser.js";
+import { logger } from "../../../logger.js";
+import { openBrowser } from "../../browser.js";
 
 dayjs.extend(customParseFormat);
 

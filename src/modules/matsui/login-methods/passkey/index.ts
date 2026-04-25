@@ -1,10 +1,10 @@
 import fs from "fs";
 import path from "path";
 import type { CDPSession, Page } from "playwright";
-import { logger } from "../../logger.js";
-import { saveStorageState } from "../browser.js";
-import { MatsuiPage } from "../page.js";
-import type { MatsuiLoginMethod } from "./login-method.js";
+import { logger } from "../../../logger.js";
+import { saveStorageState } from "../../browser.js";
+import { MatsuiPage } from "../../page.js";
+import type { MatsuiLoginMethod } from "../login-method.js";
 
 const { CHROMIUM_USER_DATA_DIR_MATSUI } = process.env;
 

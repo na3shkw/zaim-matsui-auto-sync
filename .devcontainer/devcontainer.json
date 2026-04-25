@@ -48,7 +48,6 @@
 			"extensions": [
 				"Anthropic.claude-code",
 				"esbenp.prettier-vscode",
-				"google.gemini-cli-vscode-ide-companion",
 				"MermaidChart.vscode-mermaid-chart",
 				"vitest.explorer"
 			]
@@ -57,9 +56,6 @@
 
 	// Mounts source folder to target folder.
 	"mounts": [
-		// Gemini CLI
-		"source=${localWorkspaceFolder}/.devcontainer/gemini-config,target=/home/node/.gemini,type=bind",
-		"source=${localWorkspaceFolder}/.devcontainer/gemini-config,target=/home/node/.gemini,type=bind",
 		// Claude Code
 		"source=${localWorkspaceFolder}/.devcontainer/claude-config/.claude.json,target=/home/node/.claude.json,type=bind",
 		"source=${localWorkspaceFolder}/.devcontainer/claude-config/.claude,target=/home/node/.claude,type=bind",
