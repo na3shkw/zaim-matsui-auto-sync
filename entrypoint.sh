@@ -4,6 +4,7 @@ show_usage() {
     echo "Environment Variables:"
     echo "  APP_COMMAND          - 実行するコマンド"
     echo "                          sync-matsui-zaim"
+    echo "                          register-matsui-passkey"
     echo "                          zaim-cli"
     echo "                          login-google"
     echo "  APP_ARGS             - コマンドに渡すオプション/引数"
@@ -34,7 +35,7 @@ if [ -n "$PUID" ] || [ -n "$PGID" ]; then
 fi
 
 # VNCサーバーを起動する
-if [[ "$ENABLE_VNC" = "1" || "$APP_COMMAND" = "login-google" ]]; then
+if [[ "$ENABLE_VNC" = "1" || "$APP_COMMAND" = "login-google" || "$APP_COMMAND" = "register-matsui-passkey" ]]; then
     export DISPLAY=:1
     gosu node vncserver "$DISPLAY" -geometry "${VNC_GEOMETRY:-1280x960}" -SecurityTypes None
 fi
@@ -45,6 +46,9 @@ eval "set -- $APP_ARGS"
 case "$APP_COMMAND" in
     "sync-matsui-zaim")
         exec gosu node ./dist/commands/sync-matsui-zaim.js "$@"
+        ;;
+    "register-matsui-passkey")
+        exec gosu node ./dist/commands/register-matsui-passkey.js "$@"
         ;;
     "zaim-cli")
         exec gosu node ./dist/commands/zaim/index.js "$@"
@@ -57,7 +61,7 @@ case "$APP_COMMAND" in
         ;;
     *)
         echo "Error: Unknown command '$APP_COMMAND'"
-        echo "Valid commands: sync-matsui-zaim, zaim-cli, login-google"
+        echo "Valid commands: sync-matsui-zaim, register-matsui-passkey, zaim-cli, login-google"
         echo ""
         show_usage
         exit 1
