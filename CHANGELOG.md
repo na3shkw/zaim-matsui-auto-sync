@@ -1,5 +1,17 @@
 # Changelog
 
+## [v0.4.0](https://github.com/na3shkw/zaim-matsui-auto-sync/compare/v0.3.0...v0.4.0) - 2026-04-25
+### New Features 🎉
+- feat: パスキー認証に対応 by @na3shkw in https://github.com/na3shkw/zaim-matsui-auto-sync/pull/47
+### Other Changes
+- build(deps): bump vite from 7.2.2 to 7.3.2 by @dependabot[bot] in https://github.com/na3shkw/zaim-matsui-auto-sync/pull/44
+- refactor: ログイン方式をスクレイピング戦略から分離する by @na3shkw in https://github.com/na3shkw/zaim-matsui-auto-sync/pull/42
+- ci: ドラフトPRがReady for reviewになった際にCIが実行されない問題を修正 by @na3shkw in https://github.com/na3shkw/zaim-matsui-auto-sync/pull/46
+- refactor: ページリセットを prepareTargetPage に移し必須化する by @na3shkw in https://github.com/na3shkw/zaim-matsui-auto-sync/pull/43
+- build(deps): bump postcss from 8.5.6 to 8.5.10 by @dependabot[bot] in https://github.com/na3shkw/zaim-matsui-auto-sync/pull/49
+- refactor: ログインメソッドをサブディレクトリに整理してファクトリを導入 by @na3shkw in https://github.com/na3shkw/zaim-matsui-auto-sync/pull/48
+- fix: entrypoint に register-matsui-passkey コマンドを追加 by @na3shkw in https://github.com/na3shkw/zaim-matsui-auto-sync/pull/50
+
 ## [v0.3.0](https://github.com/na3shkw/zaim-matsui-auto-sync/compare/v0.2.1...v0.3.0) - 2026-04-01
 ### New Features 🎉
 - クッキー管理をPlaywrightのstorageState APIを使用するようにリファクタリング by @na3shkw in https://github.com/na3shkw/zaim-matsui-auto-sync/pull/36
