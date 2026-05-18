@@ -2,6 +2,7 @@ import dayjs from "dayjs";
 import fs from "fs";
 import path from "path";
 import type { Page } from "playwright";
+import type { Position, UsStockAsset, UsStockPowerAsset } from "../../types/matsui.js";
 import type { AccountConfig, AppConfig, MatsuiConfig, StrategyType } from "../config.js";
 import { logger } from "../logger.js";
 import type { MatsuiLoginMethod } from "../matsui/login-methods/login-method.js";
@@ -27,7 +28,7 @@ export class MatsuiZaimSyncService {
     private scraper: MatsuiScraper,
     private loginMethod: MatsuiLoginMethod,
     private totalAmountRepo: TotalAmountRepository,
-    private zaimClient: Zaim
+    private zaimClient: Zaim,
   ) {}
 
   /**
@@ -50,7 +51,7 @@ export class MatsuiZaimSyncService {
 
       // 各戦略を実行してデータ取得
       logger.info("資産評価額を取得します。");
-      const scrapedDataMap = new Map<StrategyType, any>();
+      const scrapedDataMap = new Map<StrategyType, unknown>();
 
       this.scraper.setLoginMethod(this.loginMethod);
       await this.scraper.authenticate();
@@ -129,23 +130,29 @@ export class MatsuiZaimSyncService {
    * @param matsuiConfig 松井証券の設定
    * @returns 評価額
    */
-  private extractAmount(data: any, matsuiConfig: MatsuiConfig): number {
-    // 戦略によって構造が異なる場合はここで吸収
+  private extractAmount(data: unknown, matsuiConfig: MatsuiConfig): number {
     switch (matsuiConfig.type) {
       case "fund": {
-        // fund戦略: details[accountName].評価額を参照
-        const value = data.details?.[matsuiConfig.accountName]?.評価額;
+        const position = data as Position;
+        const value = position.details?.[matsuiConfig.accountName]?.評価額;
         if (typeof value !== "number") {
           throw new Error(`${matsuiConfig.accountName}の評価額を取得できませんでした`);
         }
         return value;
       }
       case "usstock": {
-        // usstock戦略: totalAmountフィールドを直接参照
-        if (typeof data.totalAmount !== "number") {
+        const asset = data as UsStockAsset;
+        if (typeof asset.totalAmount !== "number") {
           throw new Error(`${matsuiConfig.accountName}の評価額を取得できませんでした`);
         }
-        return data.totalAmount;
+        return asset.totalAmount;
+      }
+      case "usstock-power": {
+        const asset = data as UsStockPowerAsset;
+        if (typeof asset.totalBuyingPower !== "number") {
+          throw new Error(`${matsuiConfig.accountName}の現物買付余力を取得できませんでした`);
+        }
+        return asset.totalBuyingPower;
       }
       default:
         throw new Error(`未対応の戦略タイプです: ${matsuiConfig.type}`);
@@ -162,13 +169,13 @@ export class MatsuiZaimSyncService {
   private async captureErrorContext(
     page: Page | null,
     error: Error,
-    context: { strategyType?: string }
+    context: { strategyType?: string },
   ): Promise<void> {
     try {
       // ERROR_LOG_DIR が未設定の場合はスキップ
       if (!ERROR_LOG_DIR) {
         logger.warn(
-          "ERROR_LOG_DIR が設定されていないため、エラーコンテキストのキャプチャをスキップします。"
+          "ERROR_LOG_DIR が設定されていないため、エラーコンテキストのキャプチャをスキップします。",
         );
         return;
       }
@@ -176,7 +183,7 @@ export class MatsuiZaimSyncService {
       // ページがnullの場合はメタデータのみ保存
       if (!page) {
         logger.warn(
-          "ページオブジェクトが取得できないため、スクリーンショットとHTMLのキャプチャをスキップします。"
+          "ページオブジェクトが取得できないため、スクリーンショットとHTMLのキャプチャをスキップします。",
         );
       }
 
@@ -239,15 +246,15 @@ export class MatsuiZaimSyncService {
     account: AccountConfig,
     currentAmount: number,
     lastTotalAmounts: LastTotalAmount[],
-    dryRun: boolean
+    dryRun: boolean,
   ): Promise<void> {
     let lastTotalAmountItem = lastTotalAmounts.find(
-      (item) => item.accountId === account.zaim.accountId
+      (item) => item.accountId === account.zaim.accountId,
     );
 
     if (typeof lastTotalAmountItem === "undefined") {
       logger.info(
-        `${account.name}の前回総額データがありません。初回実行時は前回総額を0として続行します。`
+        `${account.name}の前回総額データがありません。初回実行時は前回総額を0として続行します。`,
       );
       lastTotalAmountItem = {
         amount: 0,
