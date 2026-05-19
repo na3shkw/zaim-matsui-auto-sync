@@ -3,7 +3,7 @@ import { z } from "zod";
 
 const { CONFIG_FILE } = process.env;
 
-const StrategyTypeSchema = z.enum(["fund", "usstock"]);
+const StrategyTypeSchema = z.enum(["fund", "usstock", "usstock-power"]);
 export type StrategyType = z.infer<typeof StrategyTypeSchema>;
 
 // Zodスキーマ定義
@@ -36,7 +36,7 @@ export const AppConfigSchema = z
     {
       // 松井証券の異なる口座の残高を同じZaimの口座に記録することは許可しない
       message: "Duplicate zaim.accountId values are not allowed",
-    }
+    },
   );
 
 // 型定義（Zodスキーマから自動生成）

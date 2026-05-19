@@ -37,3 +37,14 @@ export interface UsStockAsset {
    */
   dailyChange: number;
 }
+
+/**
+ * 米国株の余力データ（米国株口座の使用可能現金を円換算した合計）
+ */
+export interface UsStockPowerAsset {
+  /**
+   * 米国株口座の使用可能現金合計（円換算）
+   * = 使用可能現金(円) + 使用可能現金(ドル) × 米ドル/円レート（四捨五入）
+   */
+  totalBuyingPower: number;
+}

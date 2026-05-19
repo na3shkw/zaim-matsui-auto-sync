@@ -69,6 +69,13 @@ export class MatsuiPage {
   }
 
   /**
+   * 米国株用サイトの余力情報ページURL
+   */
+  static get usStockAssetPower(): string {
+    return this.getFullUrl(this.MATSUI_USSTOCK_BASE_URL, "/web/#/equity/asset-info/power");
+  }
+
+  /**
    * 米国株用サイトのお知らせページURL
    */
   static get usStockNotify(): string {

@@ -5,7 +5,7 @@
 
 ## 概要
 
-松井証券の資産状況（投資信託・米国株）を Zaim に同期するコマンドラインアプリケーションです。
+松井証券の資産状況を Zaim に同期するコマンドラインアプリケーションです。
 Zaim には松井証券の連携があるものの、[松井証券の電話番号認証導入によって自動的な同期ができない](https://content.zaim.net/questions/show/1125)という背景があります。
 
 このコマンドラインアプリケーションでは松井証券にログインして資産状況を取得し、そのデータを Zaim API を通して記録するものです。
@@ -83,27 +83,37 @@ docker compose run --rm -e APP_COMMAND='zaim-cli' -e APP_ARGS='auth setup-token'
   "name": "NISA",   // 任意の名前
   "enabled": true,  // 無効化したい場合は false にする
   "matsui": {
-    "type": "fund", // "fund" (投資信託) または "usstock" (米国株)
-    "accountName": "NISA口座(積立)" // 下記 (A) を参照
+    "type": "fund", // 下記 (A) を参照
+    "accountName": "NISA口座(積立)" // 下記 (B) を参照
   },
   "zaim": {
-    "accountId": "12345678",      // 下記 (B) を参照
-    "categoryId": "12345678"      // 下記 (C) を参照
+    "accountId": "12345678",      // 下記 (C) を参照
+    "categoryId": "12345678"      // 下記 (D) を参照
   }
 }
 ```
 
-#### (A) `matsui.accountName`
+#### (A) `matsui.type`
+
+同期する資産の種別を指定するもの。
+
+| 値 | 対象 | 記録内容 |
+|---|---|---|
+| `fund` | 投資信託 | 評価額合計 |
+| `usstock` | 米国株 | 株式時価総額合計（円換算） |
+| `usstock-power` | 米国株余力 | 米国株口座の使用可能現金合計（円建て + ドル建てをリアルタイムレートで円換算した値） |
+
+#### (B) `matsui.accountName`
 
 この値は同期対象の口座を指定するもの。
 
 - **投資信託 (`type: "fund"`) の場合**:
   - 松井証券の投資信託残高照会ページにアクセスし、全保有銘柄の表にある「口座区分」列の値を設定する
   - 例: `"NISA口座(積立)"`、`"特定口座"`
-- **米国株 (`type: "usstock"`) の場合**:
-  - 任意の文字列を設定する（米国株のデータ取得にはこの項目を利用しない）
+- **米国株・米国株余力 (`type: "usstock"` / `"usstock-power"`) の場合**:
+  - 任意の文字列を設定する（データ取得にはこの項目を利用しない）
 
-#### (B) `zaim.accountId`
+#### (C) `zaim.accountId`
 
 この値は同期先の Zaim の口座 ID を指定するもの。
 下記コマンドを実行して口座 ID 一覧を取得し、記録先の口座 ID を設定する。
@@ -113,7 +123,7 @@ docker compose run --rm -e APP_COMMAND='zaim-cli' -e APP_ARGS='auth setup-token'
 docker compose run --rm -e APP_COMMAND='zaim-cli' -e APP_ARGS='account list' app
 ```
 
-#### (C) `zaim.categoryId`
+#### (D) `zaim.categoryId`
 
 この値は同期先の Zaim の収入カテゴリ ID を指定するもの。
 下記コマンドを実行して収入カテゴリ ID 一覧を取得し、記録に利用するカテゴリ ID を設定する。
