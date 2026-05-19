@@ -1,5 +1,9 @@
 # Changelog
 
+## [v0.5.0](https://github.com/na3shkw/zaim-matsui-auto-sync/compare/v0.4.0...v0.5.0) - 2026-05-19
+### New Features 🎉
+- feat: 米国株余力（usstock-power）戦略を追加 by @na3shkw in https://github.com/na3shkw/zaim-matsui-auto-sync/pull/51
+
 ## [v0.4.0](https://github.com/na3shkw/zaim-matsui-auto-sync/compare/v0.3.0...v0.4.0) - 2026-04-25
 ### New Features 🎉
 - feat: パスキー認証に対応 by @na3shkw in https://github.com/na3shkw/zaim-matsui-auto-sync/pull/47
