@@ -1,5 +1,11 @@
 # Changelog
 
+## [v0.5.1](https://github.com/na3shkw/zaim-matsui-auto-sync/compare/v0.5.0...v0.5.1) - 2026-06-03
+
+### Other Changes
+- build(deps-dev): bump vitest and @vitest/coverage-v8 by @dependabot[bot] in https://github.com/na3shkw/zaim-matsui-auto-sync/pull/54
+- chore: GitHub Actionsのアクションバージョンをハッシュで固定 by @na3shkw in https://github.com/na3shkw/zaim-matsui-auto-sync/pull/56
+
 ## [v0.5.0](https://github.com/na3shkw/zaim-matsui-auto-sync/compare/v0.4.0...v0.5.0) - 2026-05-19
 ### New Features 🎉
 - feat: 米国株余力（usstock-power）戦略を追加 by @na3shkw in https://github.com/na3shkw/zaim-matsui-auto-sync/pull/51
