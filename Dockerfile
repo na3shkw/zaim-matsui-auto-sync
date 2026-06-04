@@ -4,10 +4,12 @@ FROM node:22-bookworm-slim AS builder
 WORKDIR /app
 
 COPY package.json package-lock.json tsconfig.json ./
+
+RUN npm ci --include=dev --ignore-scripts
+
 COPY src ./src
 
-RUN npm ci --include=dev --ignore-scripts && \
-    npm run build
+RUN npm run build
 
 FROM node:22-bookworm-slim
 
@@ -27,7 +29,6 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
 
 RUN chown -R node:node .
 
-COPY --from=builder --chown=node:node /app/dist ./dist
 COPY --from=builder --chown=node:node /app/package*.json ./
 
 USER node
@@ -48,6 +49,8 @@ RUN npx playwright install --with-deps --no-shell chromium && \
         /ms-playwright/ffmpeg* \
         /home/node/.npm/_logs/* && \
     chown -R node:node /home/node
+
+COPY --from=builder --chown=node:node /app/dist ./dist
 
 COPY --chmod=755 entrypoint.sh /
 
