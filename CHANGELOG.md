@@ -1,5 +1,11 @@
 # Changelog
 
+## [v0.5.2](https://github.com/na3shkw/zaim-matsui-auto-sync/compare/v0.5.1...v0.5.2) - 2026-06-15
+
+### Other Changes
+- fix(deps): esbuild セキュリティ脆弱性解消のため tsx を 4.22.4 に更新 by @na3shkw in https://github.com/na3shkw/zaim-matsui-auto-sync/pull/59
+- ci: docker ジョブを github-builder 再利用ワークフローに移行しビルドキャッシュを最適化 by @na3shkw in https://github.com/na3shkw/zaim-matsui-auto-sync/pull/58
+
 ## [v0.5.1](https://github.com/na3shkw/zaim-matsui-auto-sync/compare/v0.5.0...v0.5.1) - 2026-06-03
 
 ### Other Changes
