@@ -1,5 +1,12 @@
 # Changelog
 
+## [v0.5.3](https://github.com/na3shkw/zaim-matsui-auto-sync/compare/v0.5.2...v0.5.3) - 2026-06-21
+
+### Other Changes
+- build(deps): bump actions/checkout from 6.0.3 to 7.0.0 by @dependabot[bot] in https://github.com/na3shkw/zaim-matsui-auto-sync/pull/63
+- build(deps): bump docker/github-builder/.github/workflows/build.yml from 1.10.0 to 1.12.0 by @dependabot[bot] in https://github.com/na3shkw/zaim-matsui-auto-sync/pull/62
+- build(deps): bump davelosert/vitest-coverage-report-action from 2.12.0 to 2.12.1 by @dependabot[bot] in https://github.com/na3shkw/zaim-matsui-auto-sync/pull/61
+
 ## [v0.5.2](https://github.com/na3shkw/zaim-matsui-auto-sync/compare/v0.5.1...v0.5.2) - 2026-06-15
 
 ### Other Changes
