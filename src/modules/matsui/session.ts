@@ -1,6 +1,19 @@
-import type { Page } from "playwright";
+import type { FrameLocator, Page } from "playwright";
 import { logger } from "../logger.js";
+import { SessionTimeoutError } from "./errors.js";
 import { MatsuiPage } from "./page.js";
+
+export async function throwIfSessionTimeout(
+  ctFrame: FrameLocator,
+  originalError: unknown,
+): Promise<never> {
+  const isSessionTimeout = await ctFrame
+    .locator("text=セッションタイムアウトエラー")
+    .isVisible()
+    .catch(() => false);
+  if (isSessionTimeout) throw new SessionTimeoutError();
+  throw originalError;
+}
 
 export async function isSessionValid(page: Page): Promise<boolean> {
   try {

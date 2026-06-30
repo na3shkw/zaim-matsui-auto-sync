@@ -88,3 +88,17 @@ export function getStorageStatePath(userDataDir: string): string | undefined {
   const stateFilePath = path.join(userDataDir, "storage-state.json");
   return fs.existsSync(stateFilePath) ? stateFilePath : undefined;
 }
+
+/**
+ * storageStateファイルを削除する
+ *
+ * @param userDataDir ユーザーデータディレクトリのパス
+ */
+export function deleteStorageState(userDataDir: string): void {
+  const stateFilePath = path.join(userDataDir, "storage-state.json");
+  if (!fs.existsSync(stateFilePath)) {
+    return;
+  }
+  fs.unlinkSync(stateFilePath);
+  logger.info("storage-state.json を削除しました。");
+}

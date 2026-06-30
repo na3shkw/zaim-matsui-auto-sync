@@ -1,6 +1,6 @@
 import type { BrowserContext, Page } from "playwright";
 import { logger } from "../logger.js";
-import { getStorageStatePath, openBrowser, saveStorageState } from "./browser.js";
+import { deleteStorageState, getStorageStatePath, openBrowser, saveStorageState } from "./browser.js";
 import type { MatsuiLoginMethod } from "./login-methods/login-method.js";
 import { isSessionValid } from "./session.js";
 import type { AssetScrapingStrategy } from "./strategies/strategy-interface.js";
@@ -90,6 +90,18 @@ export class MatsuiScraper {
 
     const targetPage = await this.strategy.prepareTargetPage(this.page);
     return (await this.strategy.scrapeAssets(targetPage)) as T;
+  }
+
+  /**
+   * ブラウザのCookieとストレージ状態ファイルを削除する（セッションタイムアウト後の再ログイン前に使用）
+   */
+  async clearSession(): Promise<void> {
+    if (this.browserContext) {
+      await this.browserContext.clearCookies();
+    }
+    if (CHROMIUM_USER_DATA_DIR_MATSUI) {
+      deleteStorageState(CHROMIUM_USER_DATA_DIR_MATSUI);
+    }
   }
 
   /**

@@ -1,6 +1,7 @@
 import type { Page } from "playwright";
 import { logger } from "../../logger.js";
 import { MatsuiPage } from "../page.js";
+import { throwIfSessionTimeout } from "../session.js";
 
 /**
  * 松井証券トップから米国株サイトの新タブを開いて返す。
@@ -32,7 +33,11 @@ export async function openUsStockTab(page: Page): Promise<Page> {
   logger.info("CTフレームを取得しました。");
 
   const usStockLink = ctFrame.locator("a").filter({ hasText: "米国株サイト" });
-  await usStockLink.waitFor({ state: "visible", timeout: 10000 });
+  try {
+    await usStockLink.waitFor({ state: "visible", timeout: 10000 });
+  } catch (waitError) {
+    await throwIfSessionTimeout(ctFrame, waitError);
+  }
   await usStockLink.click();
   logger.info("「米国株サイト」リンクをクリックしました。");
 
