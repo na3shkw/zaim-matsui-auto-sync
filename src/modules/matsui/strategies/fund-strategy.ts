@@ -3,6 +3,7 @@ import playwright from "playwright";
 import type { Position } from "../../../types/matsui.js";
 import { logger } from "../../logger.js";
 import { parseNumber } from "../../utils.js";
+import { throwIfSessionTimeout } from "../session.js";
 import { MatsuiPage } from "../page.js";
 import type { AssetScrapingStrategy } from "./strategy-interface.js";
 
@@ -23,7 +24,7 @@ export class FundStrategy implements AssetScrapingStrategy<Position> {
 
     // 起動ボタンをクリック（別画面に遷移）
     const activateButton = page.locator(
-      '[data-page="activate-mutual-fund-screen"] .btn-menu-activate-mutual-fund-screen'
+      '[data-page="activate-mutual-fund-screen"] .btn-menu-activate-mutual-fund-screen',
     );
     await activateButton.waitFor({ state: "visible", timeout: 10000 });
     await activateButton.click();
@@ -38,7 +39,11 @@ export class FundStrategy implements AssetScrapingStrategy<Position> {
 
     // frame内の起動ボタン (name="kidouButton"のimg要素の親a要素) を取得
     const launchButton = ctFrame.locator('a:has(img[name="kidouButton"])');
-    await launchButton.waitFor({ state: "visible", timeout: 30000 });
+    try {
+      await launchButton.waitFor({ state: "visible", timeout: 10000 });
+    } catch (waitError) {
+      await throwIfSessionTimeout(ctFrame, waitError);
+    }
     logger.info("起動ボタンが表示されました。");
 
     // 起動ボタンをクリックして新しいタブが開くのを待つ
@@ -92,7 +97,7 @@ export class FundStrategy implements AssetScrapingStrategy<Position> {
             評価損益: row[2] ? parseNumber(row[2]) : undefined,
             損益率: row[3] ? parseNumber(row[3]) : undefined,
           },
-        ])
+        ]),
       ),
       total: {
         評価額: totalRow[1] ? parseNumber(totalRow[1]) : undefined,

@@ -5,6 +5,7 @@ import type { Page } from "playwright";
 import type { Position, UsStockAsset, UsStockPowerAsset } from "../../types/matsui.js";
 import type { AccountConfig, AppConfig, MatsuiConfig, StrategyType } from "../config.js";
 import { logger } from "../logger.js";
+import { SessionTimeoutError } from "../matsui/errors.js";
 import type { MatsuiLoginMethod } from "../matsui/login-methods/login-method.js";
 import type { MatsuiScraper } from "../matsui/scraper.js";
 import { StrategyFactory } from "../matsui/strategies/index.js";
@@ -62,7 +63,17 @@ export class MatsuiZaimSyncService {
           const strategy = StrategyFactory.create(strategyType);
           this.scraper.setStrategy(strategy);
           logger.info(`戦略 ${strategyType} のスクレイピングを開始します。`);
-          const data = await this.scraper.scrape();
+          let data: unknown;
+          try {
+            data = await this.scraper.scrape();
+          } catch (scrapeError) {
+            if (!(scrapeError instanceof SessionTimeoutError)) throw scrapeError;
+            logger.warn("セッションタイムアウトエラーを検知しました。セッションをクリアして再ログインします。");
+            await this.scraper.clearSession();
+            await this.scraper.authenticate();
+            logger.info("再ログインが完了しました。スクレイピングをリトライします。");
+            data = await this.scraper.scrape();
+          }
           logger.info(`戦略 ${strategyType} のスクレイピングが完了しました。`);
           scrapedDataMap.set(strategyType, data);
         } catch (error) {
