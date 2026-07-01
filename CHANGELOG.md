@@ -1,5 +1,13 @@
 # Changelog
 
+## [v0.6.0](https://github.com/na3shkw/zaim-matsui-auto-sync/compare/v0.5.2...v0.6.0) - 2026-07-01
+
+### Other Changes
+- build(deps): bump actions/checkout from 6.0.3 to 7.0.0 by @dependabot[bot] in https://github.com/na3shkw/zaim-matsui-auto-sync/pull/63
+- build(deps): bump docker/github-builder/.github/workflows/build.yml from 1.10.0 to 1.12.0 by @dependabot[bot] in https://github.com/na3shkw/zaim-matsui-auto-sync/pull/62
+- build(deps): bump davelosert/vitest-coverage-report-action from 2.12.0 to 2.12.1 by @dependabot[bot] in https://github.com/na3shkw/zaim-matsui-auto-sync/pull/61
+- feat: セッションタイムアウトエラーの自動検出と再ログインによるリトライ対応 by @na3shkw in https://github.com/na3shkw/zaim-matsui-auto-sync/pull/65
+
 ## [v0.5.2](https://github.com/na3shkw/zaim-matsui-auto-sync/compare/v0.5.1...v0.5.2) - 2026-06-15
 
 ### Other Changes
