@@ -12,7 +12,7 @@ services:
     env_file:
       - .env
     security_opt:
-      - seccomp:./seccomp-profile.json
+      - seccomp:./docker/seccomp-profile.json
     volumes:
       - type: volume
         source: chromium-data

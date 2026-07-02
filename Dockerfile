@@ -22,7 +22,7 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
     apt-get update && \
     DEBIAN_FRONTEND=noninteractive apt-get --no-install-recommends install -y \
         gosu \
-        lxde \
+        openbox \
         tigervnc-standalone-server \
         tigervnc-common \
         dbus-x11
@@ -44,6 +44,7 @@ RUN npx playwright install --with-deps --no-shell chromium && \
     npm uninstall -g npm && \
     find /usr/local/bin -type l -name "yarn*" -exec unlink {} \; && \
     rm -rf \
+        /var/lib/apt/lists/* \
         /opt/yarn-* \
         /tmp/* \
         /ms-playwright/ffmpeg* \
@@ -51,6 +52,8 @@ RUN npx playwright install --with-deps --no-shell chromium && \
     chown -R node:node /home/node
 
 COPY --from=builder --chown=node:node /app/dist ./dist
+
+COPY --chown=node:node --chmod=755 docker/vnc/xstartup /home/node/.vnc/xstartup
 
 COPY --chmod=755 entrypoint.sh /
 
