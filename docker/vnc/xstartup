@@ -1,0 +1,5 @@
+#!/bin/sh
+# TigerVNC用の起動スクリプト。openboxをウィンドウマネージャとして起動する。
+unset SESSION_MANAGER
+unset DBUS_SESSION_BUS_ADDRESS
+exec dbus-launch --exit-with-session openbox
