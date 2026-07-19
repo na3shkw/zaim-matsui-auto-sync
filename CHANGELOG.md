@@ -1,5 +1,15 @@
 # Changelog
 
+## [v0.6.1](https://github.com/na3shkw/zaim-matsui-auto-sync/compare/v0.6.0...v0.6.1) - 2026-07-19
+
+### Other Changes
+- build(deps): bump docker/github-builder/.github/workflows/build.yml from 1.12.0 to 1.13.0 by @dependabot[bot] in https://github.com/na3shkw/zaim-matsui-auto-sync/pull/67
+- chore: デスクトップ環境をlxdeからopenboxに置き換えてイメージを軽量化 by @na3shkw in https://github.com/na3shkw/zaim-matsui-auto-sync/pull/66
+- build(deps): bump davelosert/vitest-coverage-report-action from 2.12.1 to 2.12.2 by @dependabot[bot] in https://github.com/na3shkw/zaim-matsui-auto-sync/pull/69
+- build(deps): bump docker/github-builder/.github/workflows/build.yml from 1.13.0 to 1.14.0 by @dependabot[bot] in https://github.com/na3shkw/zaim-matsui-auto-sync/pull/71
+- build(deps): bump Songmu/tagpr from 1.20.0 to 1.20.1 by @dependabot[bot] in https://github.com/na3shkw/zaim-matsui-auto-sync/pull/72
+- build(deps): bump actions/setup-node from 6.4.0 to 7.0.0 by @dependabot[bot] in https://github.com/na3shkw/zaim-matsui-auto-sync/pull/70
+
 ## [v0.6.0](https://github.com/na3shkw/zaim-matsui-auto-sync/compare/v0.5.2...v0.6.0) - 2026-07-01
 
 ### Other Changes
