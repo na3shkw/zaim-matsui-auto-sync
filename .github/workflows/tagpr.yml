@@ -40,6 +40,7 @@ jobs:
       cache: true
       cache-mode: max
       sbom: true
+      set-meta-labels: true
       meta-images: ghcr.io/${{ github.repository }}
       meta-tags: |
         type=semver,pattern={{version}},value=${{ needs.tagpr.outputs.tag }}
