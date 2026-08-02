@@ -1,5 +1,13 @@
 # Changelog
 
+## [v0.6.2](https://github.com/na3shkw/zaim-matsui-auto-sync/compare/v0.6.1...v0.6.2) - 2026-08-02
+
+### Other Changes
+- build(deps): bump actions/checkout from 7.0.0 to 7.0.1 by @dependabot[bot] in https://github.com/na3shkw/zaim-matsui-auto-sync/pull/73
+- build(deps-dev): bump postcss from 8.5.15 to 8.5.23 by @dependabot[bot] in https://github.com/na3shkw/zaim-matsui-auto-sync/pull/75
+- build(deps): bump docker/github-builder/.github/workflows/build.yml from 1.14.0 to 1.15.0 by @dependabot[bot] in https://github.com/na3shkw/zaim-matsui-auto-sync/pull/76
+- feat: Dockerイメージに OCI 標準ラベルを付与する by @na3shkw in https://github.com/na3shkw/zaim-matsui-auto-sync/pull/77
+
 ## [v0.6.1](https://github.com/na3shkw/zaim-matsui-auto-sync/compare/v0.6.0...v0.6.1) - 2026-07-19
 
 ### Other Changes
