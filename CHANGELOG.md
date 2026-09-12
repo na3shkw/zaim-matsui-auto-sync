@@ -1,5 +1,17 @@
 # Changelog
 
+## [v0.6.3](https://github.com/na3shkw/zaim-matsui-auto-sync/compare/v0.6.2...v0.6.3) - 2026-09-12
+
+### Documentation 📝
+- docs: CLAUDE.md の追加と設定例・requirements.md の整理 by @na3shkw in https://github.com/na3shkw/zaim-matsui-auto-sync/pull/86
+### Other Changes
+- build(deps): bump docker/github-builder/.github/workflows/build.yml from 1.15.0 to 1.16.0 by @dependabot[bot] in https://github.com/na3shkw/zaim-matsui-auto-sync/pull/79
+- build(deps): bump Songmu/tagpr from 1.20.1 to 1.20.2 by @dependabot[bot] in https://github.com/na3shkw/zaim-matsui-auto-sync/pull/81
+- build(deps): bump docker/github-builder/.github/workflows/build.yml from 1.16.0 to 1.17.0 by @dependabot[bot] in https://github.com/na3shkw/zaim-matsui-auto-sync/pull/82
+- build(deps): bump davelosert/vitest-coverage-report-action from 2.12.2 to 2.13.0 by @dependabot[bot] in https://github.com/na3shkw/zaim-matsui-auto-sync/pull/83
+- build(deps): bump Songmu/tagpr from 1.20.2 to 1.20.3 by @dependabot[bot] in https://github.com/na3shkw/zaim-matsui-auto-sync/pull/84
+- build(deps-dev): bump vitest from 4.1.8 to 4.1.11 by @dependabot[bot] in https://github.com/na3shkw/zaim-matsui-auto-sync/pull/85
+
 ## [v0.6.2](https://github.com/na3shkw/zaim-matsui-auto-sync/compare/v0.6.1...v0.6.2) - 2026-08-02
 
 ### Other Changes
