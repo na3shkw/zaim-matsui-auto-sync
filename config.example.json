@@ -8,8 +8,8 @@
         "accountName": "NISA口座(積立)"
       },
       "zaim": {
-        "accountId": "12345678",
-        "categoryId": "12345678"
+        "accountId": 12345678,
+        "categoryId": 12345678
       }
     }
   ]
