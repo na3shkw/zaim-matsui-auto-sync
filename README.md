@@ -78,18 +78,24 @@ docker compose run --rm -e APP_COMMAND='zaim-cli' -e APP_ARGS='auth setup-token'
 
 `config.example.json` をコピーして `config.json` ファイルを作成し、各項目の内容を設定する。
 
+同期対象の口座ごとに `accounts` 配列の要素を追加する。
+
 ```jsonc
 {
-  "name": "NISA",   // 任意の名前
-  "enabled": true,  // 無効化したい場合は false にする
-  "matsui": {
-    "type": "fund", // 下記 (A) を参照
-    "accountName": "NISA口座(積立)" // 下記 (B) を参照
-  },
-  "zaim": {
-    "accountId": "12345678",      // 下記 (C) を参照
-    "categoryId": "12345678"      // 下記 (D) を参照
-  }
+  "accounts": [
+    {
+      "name": "NISA",   // 任意の名前
+      "enabled": true,  // 無効化したい場合は false にする
+      "matsui": {
+        "type": "fund", // 下記 (A) を参照
+        "accountName": "NISA口座(積立)" // 下記 (B) を参照
+      },
+      "zaim": {
+        "accountId": 12345678,  // 下記 (C) を参照
+        "categoryId": 12345678  // 下記 (D) を参照
+      }
+    }
+  ]
 }
 ```
 
