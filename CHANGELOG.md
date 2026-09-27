@@ -1,5 +1,10 @@
 # Changelog
 
+## [v0.6.4](https://github.com/na3shkw/zaim-matsui-auto-sync/compare/v0.6.3...v0.6.4) - 2026-09-27
+
+### Other Changes
+- build(deps): bump Songmu/tagpr from 1.20.3 to 1.21.0 by @dependabot[bot] in https://github.com/na3shkw/zaim-matsui-auto-sync/pull/87
+
 ## [v0.6.3](https://github.com/na3shkw/zaim-matsui-auto-sync/compare/v0.6.2...v0.6.3) - 2026-09-12
 
 ### Documentation 📝
