@@ -1,5 +1,16 @@
 # Changelog
 
+## [v0.6.4](https://github.com/na3shkw/zaim-matsui-auto-sync/compare/v0.6.3...v0.6.4) - 2026-10-21
+
+### Other Changes
+- build(deps): bump Songmu/tagpr from 1.20.3 to 1.21.0 by @dependabot[bot] in https://github.com/na3shkw/zaim-matsui-auto-sync/pull/87
+- build(deps): bump Songmu/tagpr from 1.21.0 to 1.21.1 by @dependabot[bot] in https://github.com/na3shkw/zaim-matsui-auto-sync/pull/89
+- build(deps): bump Songmu/tagpr from 1.21.1 to 1.21.2 by @dependabot[bot] in https://github.com/na3shkw/zaim-matsui-auto-sync/pull/90
+- build(deps): bump actions/setup-node from 7.0.0 to 7.1.0 by @dependabot[bot] in https://github.com/na3shkw/zaim-matsui-auto-sync/pull/91
+- build(deps-dev): bump source-map-js from 1.2.1 to 1.2.2 by @dependabot[bot] in https://github.com/na3shkw/zaim-matsui-auto-sync/pull/92
+- build(deps): bump davelosert/vitest-coverage-report-action from 2.13.0 to 2.13.1 by @dependabot[bot] in https://github.com/na3shkw/zaim-matsui-auto-sync/pull/93
+- build(deps-dev): bump vite from 8.3.0 to 8.3.4 by @dependabot[bot] in https://github.com/na3shkw/zaim-matsui-auto-sync/pull/94
+
 ## [v0.6.3](https://github.com/na3shkw/zaim-matsui-auto-sync/compare/v0.6.2...v0.6.3) - 2026-09-12
 
 ### Documentation 📝
