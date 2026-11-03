@@ -66,15 +66,12 @@ export class FundStrategy implements AssetScrapingStrategy<Position> {
       .locator("+ table tr")
       .filter({ hasText: "合計" })
       .first();
-    const noRecord = newPage.locator("#currentPortfolioInquiry .noRecord");
+    const noRecord = newPage.locator("#currentPortfolioInquiry .noRecord").first();
     try {
       await totalRow.waitFor({ state: "visible", timeout: 30000 });
       await noRecord.waitFor({ state: "detached", timeout: 30000 });
     } catch (waitError) {
-      const isNoRecord = await noRecord
-        .first()
-        .isVisible()
-        .catch(() => false);
+      const isNoRecord = await noRecord.isVisible().catch(() => false);
       if (isNoRecord) {
         throw new Error("投資信託の残高データがありません。", { cause: waitError });
       }
