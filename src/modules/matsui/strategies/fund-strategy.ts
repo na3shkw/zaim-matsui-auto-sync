@@ -7,6 +7,18 @@ import { throwIfSessionTimeout } from "../session.js";
 import { MatsuiPage } from "../page.js";
 import type { AssetScrapingStrategy } from "./strategy-interface.js";
 
+export async function throwIfNoRecord(page: Page, originalError: unknown): Promise<never> {
+  const isNoRecord = await page
+    .locator("#currentPortfolioInquiry .noRecord")
+    .first()
+    .isVisible()
+    .catch(() => false);
+  if (isNoRecord) {
+    throw new Error("投資信託の残高データがありません。", { cause: originalError });
+  }
+  throw originalError;
+}
+
 /**
  * 投資信託の資産データをスクレイピングする戦略
  */
@@ -61,11 +73,16 @@ export class FundStrategy implements AssetScrapingStrategy<Position> {
     await newPage.waitForLoadState("networkidle");
     logger.info("残高照会ページに遷移しました。");
 
-    // メインのコンテナが表示され、残高の読み込みが完了する（「※該当するデータがありません。」の要素が消える）まで待機する
-    await newPage.locator("#currentPortfolioInquiry").waitFor({ state: "visible", timeout: 30000 });
-    await newPage
-      .locator("#currentPortfolioInquiry .noRecord")
-      .waitFor({ state: "detached", timeout: 30000 });
+    const totalRow = newPage
+      .locator("#currentPortfolioInquiry h4", { hasText: "全保有銘柄" })
+      .locator("+ table tr")
+      .filter({ hasText: "合計" })
+      .first();
+    try {
+      await totalRow.waitFor({ state: "visible", timeout: 30000 });
+    } catch (waitError) {
+      await throwIfNoRecord(newPage, waitError);
+    }
 
     return newPage;
   }

@@ -15,11 +15,22 @@ export class MatsuiScraper {
   private strategy: AssetScrapingStrategy<unknown> | null = null;
   private browserContext: BrowserContext | null = null;
   private page: Page | null = null;
+  private lastScrapePage: Page | null = null;
 
   /**
    * 現在のページオブジェクトを取得
    */
   get currentPage(): Page | null {
+    return this.page;
+  }
+
+  /**
+   * 直近の scrape() で戦略が操作していたページを取得する
+   */
+  get activePage(): Page | null {
+    if (this.lastScrapePage && !this.lastScrapePage.isClosed()) {
+      return this.lastScrapePage;
+    }
     return this.page;
   }
 
@@ -88,8 +99,18 @@ export class MatsuiScraper {
       throw new Error("スクレイピング戦略またはページが初期化されていません。");
     }
 
-    const targetPage = await this.strategy.prepareTargetPage(this.page);
-    return (await this.strategy.scrapeAssets(targetPage)) as T;
+    this.lastScrapePage = null;
+    const onPage = (newPage: Page) => {
+      this.lastScrapePage = newPage;
+    };
+    this.browserContext?.on("page", onPage);
+    try {
+      const targetPage = await this.strategy.prepareTargetPage(this.page);
+      this.lastScrapePage = targetPage;
+      return (await this.strategy.scrapeAssets(targetPage)) as T;
+    } finally {
+      this.browserContext?.off("page", onPage);
+    }
   }
 
   /**
