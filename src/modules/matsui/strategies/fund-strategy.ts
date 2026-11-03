@@ -7,18 +7,6 @@ import { throwIfSessionTimeout } from "../session.js";
 import { MatsuiPage } from "../page.js";
 import type { AssetScrapingStrategy } from "./strategy-interface.js";
 
-export async function throwIfNoRecord(page: Page, originalError: unknown): Promise<never> {
-  const isNoRecord = await page
-    .locator("#currentPortfolioInquiry .noRecord")
-    .first()
-    .isVisible()
-    .catch(() => false);
-  if (isNoRecord) {
-    throw new Error("投資信託の残高データがありません。", { cause: originalError });
-  }
-  throw originalError;
-}
-
 /**
  * 投資信託の資産データをスクレイピングする戦略
  */
@@ -78,13 +66,19 @@ export class FundStrategy implements AssetScrapingStrategy<Position> {
       .locator("+ table tr")
       .filter({ hasText: "合計" })
       .first();
+    const noRecord = newPage.locator("#currentPortfolioInquiry .noRecord");
     try {
       await totalRow.waitFor({ state: "visible", timeout: 30000 });
-      await newPage
-        .locator("#currentPortfolioInquiry .noRecord")
-        .waitFor({ state: "detached", timeout: 30000 });
+      await noRecord.waitFor({ state: "detached", timeout: 30000 });
     } catch (waitError) {
-      await throwIfNoRecord(newPage, waitError);
+      const isNoRecord = await noRecord
+        .first()
+        .isVisible()
+        .catch(() => false);
+      if (isNoRecord) {
+        throw new Error("投資信託の残高データがありません。", { cause: waitError });
+      }
+      throw waitError;
     }
 
     return newPage;
