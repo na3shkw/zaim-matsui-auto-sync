@@ -1,5 +1,24 @@
 # Changelog
 
+## [v0.6.4](https://github.com/na3shkw/zaim-matsui-auto-sync/compare/v0.6.3...v0.6.4) - 2026-11-03
+
+### Bug Fixes 🐛
+- fix: 投資信託のスクレイピング失敗時の調査性を改善 by @na3shkw in https://github.com/na3shkw/zaim-matsui-auto-sync/pull/101
+### Other Changes
+- build(deps): bump Songmu/tagpr from 1.20.3 to 1.21.0 by @dependabot[bot] in https://github.com/na3shkw/zaim-matsui-auto-sync/pull/87
+- build(deps): bump Songmu/tagpr from 1.21.0 to 1.21.1 by @dependabot[bot] in https://github.com/na3shkw/zaim-matsui-auto-sync/pull/89
+- build(deps): bump Songmu/tagpr from 1.21.1 to 1.21.2 by @dependabot[bot] in https://github.com/na3shkw/zaim-matsui-auto-sync/pull/90
+- build(deps): bump actions/setup-node from 7.0.0 to 7.1.0 by @dependabot[bot] in https://github.com/na3shkw/zaim-matsui-auto-sync/pull/91
+- build(deps-dev): bump source-map-js from 1.2.1 to 1.2.2 by @dependabot[bot] in https://github.com/na3shkw/zaim-matsui-auto-sync/pull/92
+- build(deps): bump davelosert/vitest-coverage-report-action from 2.13.0 to 2.13.1 by @dependabot[bot] in https://github.com/na3shkw/zaim-matsui-auto-sync/pull/93
+- build(deps-dev): bump vite from 8.3.0 to 8.3.4 by @dependabot[bot] in https://github.com/na3shkw/zaim-matsui-auto-sync/pull/94
+- build(deps): bump docker/github-builder/.github/workflows/build.yml from 1.17.0 to 1.18.1 by @dependabot[bot] in https://github.com/na3shkw/zaim-matsui-auto-sync/pull/96
+- build(deps): bump Songmu/tagpr from 1.21.2 to 1.21.3 by @dependabot[bot] in https://github.com/na3shkw/zaim-matsui-auto-sync/pull/95
+- build(deps): bump zod from 4.1.9 to 4.6.6 by @dependabot[bot] in https://github.com/na3shkw/zaim-matsui-auto-sync/pull/97
+- build(deps): bump Songmu/tagpr from 1.21.3 to 1.21.4 by @dependabot[bot] in https://github.com/na3shkw/zaim-matsui-auto-sync/pull/99
+- chore: serena MCP サーバーの設定を削除 by @na3shkw in https://github.com/na3shkw/zaim-matsui-auto-sync/pull/100
+- GitHub Actions の workflow lockfile を導入 by @na3shkw in https://github.com/na3shkw/zaim-matsui-auto-sync/pull/102
+
 ## [v0.6.3](https://github.com/na3shkw/zaim-matsui-auto-sync/compare/v0.6.2...v0.6.3) - 2026-09-12
 
 ### Documentation 📝
