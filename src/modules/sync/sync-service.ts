@@ -78,7 +78,7 @@ export class MatsuiZaimSyncService {
           scrapedDataMap.set(strategyType, data);
         } catch (error) {
           // 戦略ごとのエラーをキャプチャ
-          await this.captureErrorContext(this.scraper.currentPage, error as Error, {
+          await this.captureErrorContext(this.scraper.activePage, error as Error, {
             strategyType,
           });
           throw error; // 再スロー

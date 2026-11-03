@@ -61,11 +61,22 @@ export class FundStrategy implements AssetScrapingStrategy<Position> {
     await newPage.waitForLoadState("networkidle");
     logger.info("残高照会ページに遷移しました。");
 
-    // メインのコンテナが表示され、残高の読み込みが完了する（「※該当するデータがありません。」の要素が消える）まで待機する
-    await newPage.locator("#currentPortfolioInquiry").waitFor({ state: "visible", timeout: 30000 });
-    await newPage
-      .locator("#currentPortfolioInquiry .noRecord")
-      .waitFor({ state: "detached", timeout: 30000 });
+    const totalRow = newPage
+      .locator("#currentPortfolioInquiry h4", { hasText: "全保有銘柄" })
+      .locator("+ table tr")
+      .filter({ hasText: "合計" })
+      .first();
+    const noRecord = newPage.locator("#currentPortfolioInquiry .noRecord").first();
+    try {
+      await totalRow.waitFor({ state: "visible", timeout: 30000 });
+      await noRecord.waitFor({ state: "detached", timeout: 30000 });
+    } catch (waitError) {
+      const isNoRecord = await noRecord.isVisible().catch(() => false);
+      if (isNoRecord) {
+        throw new Error("投資信託の残高データがありません。", { cause: waitError });
+      }
+      throw waitError;
+    }
 
     return newPage;
   }
