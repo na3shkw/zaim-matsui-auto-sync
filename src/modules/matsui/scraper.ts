@@ -70,6 +70,7 @@ export class MatsuiScraper {
    */
   setStrategy<T>(strategy: AssetScrapingStrategy<T>): void {
     this.strategy = strategy;
+    this.lastScrapePage = null;
   }
 
   /**
@@ -104,13 +105,14 @@ export class MatsuiScraper {
       this.lastScrapePage = newPage;
     };
     this.browserContext?.on("page", onPage);
+    let targetPage: Page;
     try {
-      const targetPage = await this.strategy.prepareTargetPage(this.page);
-      this.lastScrapePage = targetPage;
-      return (await this.strategy.scrapeAssets(targetPage)) as T;
+      targetPage = await this.strategy.prepareTargetPage(this.page);
     } finally {
       this.browserContext?.off("page", onPage);
     }
+    this.lastScrapePage = targetPage;
+    return (await this.strategy.scrapeAssets(targetPage)) as T;
   }
 
   /**

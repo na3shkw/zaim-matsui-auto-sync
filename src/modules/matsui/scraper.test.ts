@@ -72,13 +72,27 @@ describe("MatsuiScraper.activePage", () => {
     expect(scraper.activePage).toBe(firstPage);
   });
 
-  it("前回の scrape() で開いたタブは、次の scrape() に引き継がない", async () => {
+  it("前の戦略で開いたタブは、次の戦略に引き継がない", async () => {
     const scraper = await createScraper(createStrategyOpeningTab(createPageMock()));
     await expect(scraper.scrape()).rejects.toThrow("失敗");
 
     scraper.setStrategy(createStrategyFailingInPlace());
-    await expect(scraper.scrape()).rejects.toThrow("失敗");
 
     expect(scraper.activePage).toBe(firstPage);
+  });
+
+  it("scrapeAssets() の実行中に開いたタブでは、戦略が返したタブを上書きしない", async () => {
+    const targetPage = createPageMock();
+    const scraper = await createScraper({
+      prepareTargetPage: vi.fn().mockResolvedValue(targetPage),
+      scrapeAssets: vi.fn(async () => {
+        browserContext.emit("page", createPageMock());
+        throw new Error("失敗");
+      }),
+    });
+
+    await expect(scraper.scrape()).rejects.toThrow("失敗");
+
+    expect(scraper.activePage).toBe(targetPage);
   });
 });

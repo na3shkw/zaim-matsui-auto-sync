@@ -80,6 +80,9 @@ export class FundStrategy implements AssetScrapingStrategy<Position> {
       .first();
     try {
       await totalRow.waitFor({ state: "visible", timeout: 30000 });
+      await newPage
+        .locator("#currentPortfolioInquiry .noRecord")
+        .waitFor({ state: "detached", timeout: 30000 });
     } catch (waitError) {
       await throwIfNoRecord(newPage, waitError);
     }
