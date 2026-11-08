@@ -4,6 +4,8 @@ import type { BrowserContext } from "playwright";
 import { chromium } from "playwright";
 import { logger } from "../logger.js";
 
+const { BROWSER_USER_AGENT } = process.env;
+
 /**
  * ユーザーデータディレクトリを指定してブラウザを開く
  *
@@ -15,10 +17,11 @@ import { logger } from "../logger.js";
 export async function openBrowser(
   userDataDir: string,
   headless: boolean = true,
-  storageStatePath?: string
+  storageStatePath?: string,
 ) {
   const browserContext = await chromium.launchPersistentContext(userDataDir, {
     headless,
+    ...(BROWSER_USER_AGENT ? { userAgent: BROWSER_USER_AGENT } : {}),
     // ヘッドレスの場合はChromeの新しいヘッドレスモードを使うためにchromiumの指定が必須
     channel: "chromium",
     args: [
@@ -42,7 +45,7 @@ export async function openBrowser(
     } catch (e) {
       logger.warn(
         { err: e },
-        "storage-state.json の読み込みに失敗しました。Cookieなしで続行します。"
+        "storage-state.json の読み込みに失敗しました。Cookieなしで続行します。",
       );
     }
   }
@@ -53,7 +56,7 @@ export async function openBrowser(
       status: 200,
       contentType: "application/javascript",
       body: "// blocked",
-    })
+    }),
   );
 
   const page = browserContext.pages()[0];
@@ -72,7 +75,7 @@ export async function openBrowser(
  */
 export async function saveStorageState(
   browserContext: BrowserContext,
-  userDataDir: string
+  userDataDir: string,
 ): Promise<void> {
   const stateFilePath = path.join(userDataDir, "storage-state.json");
   await browserContext.storageState({ path: stateFilePath });
