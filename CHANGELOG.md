@@ -1,5 +1,15 @@
 # Changelog
 
+## [v0.7.0](https://github.com/na3shkw/zaim-matsui-auto-sync/compare/v0.6.4...v0.7.0) - 2026-11-08
+
+### Bug Fixes 🐛
+- fix: 投資信託サイトでログイン無効になる問題に対応する by @na3shkw in https://github.com/na3shkw/zaim-matsui-auto-sync/pull/103
+### Other Changes
+- fix: vitest 関連パッケージを 4.1.12 に更新し @vitest/mocker の脆弱性を解消 by @na3shkw in https://github.com/na3shkw/zaim-matsui-auto-sync/pull/104
+- build(deps): bump davelosert/vitest-coverage-report-action from 2.13.1 to 2.13.2 by @dependabot[bot] in https://github.com/na3shkw/zaim-matsui-auto-sync/pull/106
+- build(deps): bump docker/github-builder/.github/workflows/build.yml from 1.18.1 to 1.19.0 by @dependabot[bot] in https://github.com/na3shkw/zaim-matsui-auto-sync/pull/108
+- build(deps): bump Songmu/tagpr from 1.21.4 to 1.22.0 by @dependabot[bot] in https://github.com/na3shkw/zaim-matsui-auto-sync/pull/107
+
 ## [v0.6.4](https://github.com/na3shkw/zaim-matsui-auto-sync/compare/v0.6.3...v0.6.4) - 2026-11-03
 
 ### Bug Fixes 🐛
