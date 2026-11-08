@@ -4,6 +4,8 @@ import type { BrowserContext } from "playwright";
 import { chromium } from "playwright";
 import { logger } from "../logger.js";
 
+const { BROWSER_USER_AGENT } = process.env;
+
 /**
  * ユーザーデータディレクトリを指定してブラウザを開く
  *
@@ -15,10 +17,11 @@ import { logger } from "../logger.js";
 export async function openBrowser(
   userDataDir: string,
   headless: boolean = true,
-  storageStatePath?: string
+  storageStatePath?: string,
 ) {
   const browserContext = await chromium.launchPersistentContext(userDataDir, {
     headless,
+    ...(BROWSER_USER_AGENT ? { userAgent: BROWSER_USER_AGENT } : {}),
     // ヘッドレスの場合はChromeの新しいヘッドレスモードを使うためにchromiumの指定が必須
     channel: "chromium",
     args: [
@@ -42,19 +45,27 @@ export async function openBrowser(
     } catch (e) {
       logger.warn(
         { err: e },
-        "storage-state.json の読み込みに失敗しました。Cookieなしで続行します。"
+        "storage-state.json の読み込みに失敗しました。Cookieなしで続行します。",
       );
     }
   }
 
-  // ランダムに表示されるポップアップスクリプトをブロック
-  await browserContext.route(/\/Rtoaster(\.Popup)?\.js(\?.*)?$/, (route) =>
-    route.fulfill({
-      status: 200,
-      contentType: "application/javascript",
-      body: "// blocked",
-    })
-  );
+  // 画面操作の妨げになるスクリプトをブロック
+  const blockedScriptPatterns = [
+    // ランダムに表示されるポップアップ
+    /\/Rtoaster(\.Popup)?\.js(\?.*)?$/,
+    // KARTE が表示する要素がボタンに重なり、クリックできなくなる
+    /^https:\/\/[^/]+\.karte\.io\//,
+  ];
+  for (const pattern of blockedScriptPatterns) {
+    await browserContext.route(pattern, (route) =>
+      route.fulfill({
+        status: 200,
+        contentType: "application/javascript",
+        body: "// blocked",
+      }),
+    );
+  }
 
   const page = browserContext.pages()[0];
   if (!page) {
@@ -72,7 +83,7 @@ export async function openBrowser(
  */
 export async function saveStorageState(
   browserContext: BrowserContext,
-  userDataDir: string
+  userDataDir: string,
 ): Promise<void> {
   const stateFilePath = path.join(userDataDir, "storage-state.json");
   await browserContext.storageState({ path: stateFilePath });

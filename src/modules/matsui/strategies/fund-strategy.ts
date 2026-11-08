@@ -3,6 +3,7 @@ import playwright from "playwright";
 import type { Position } from "../../../types/matsui.js";
 import { logger } from "../../logger.js";
 import { parseNumber } from "../../utils.js";
+import { SessionTimeoutError } from "../errors.js";
 import { throwIfSessionTimeout } from "../session.js";
 import { MatsuiPage } from "../page.js";
 import type { AssetScrapingStrategy } from "./strategy-interface.js";
@@ -56,29 +57,44 @@ export class FundStrategy implements AssetScrapingStrategy<Position> {
     await newPage.waitForLoadState("networkidle");
     logger.info("投資信託サイトが起動しました。");
 
-    // 既存の残高照会ページ遷移処理
     await newPage.goto(MatsuiPage.position);
     await newPage.waitForLoadState("networkidle");
     logger.info("残高照会ページに遷移しました。");
 
-    const totalRow = newPage
+    await this.waitForPositionTable(newPage);
+    return newPage;
+  }
+
+  /**
+   * 残高表の読み込み完了を待つ。ログイン無効ダイアログが出た時点で待機を打ち切る。
+   */
+  private async waitForPositionTable(page: Page): Promise<void> {
+    const totalRow = page
       .locator("#currentPortfolioInquiry h4", { hasText: "全保有銘柄" })
       .locator("+ table tr")
       .filter({ hasText: "合計" })
       .first();
-    const noRecord = newPage.locator("#currentPortfolioInquiry .noRecord").first();
+    const noRecord = page.locator("#currentPortfolioInquiry .noRecord").first();
+    // セッション切れ時に表示されるダイアログ
+    const loginInvalidDialog = page
+      .locator(".modal-container.dialog.error", { hasText: "ログインが無効になりました" })
+      .first();
+    const isLoginInvalid = () => loginInvalidDialog.isVisible().catch(() => false);
+
+    let waitError: unknown;
     try {
-      await totalRow.waitFor({ state: "visible", timeout: 30000 });
-      await noRecord.waitFor({ state: "detached", timeout: 30000 });
-    } catch (waitError) {
-      const isNoRecord = await noRecord.isVisible().catch(() => false);
-      if (isNoRecord) {
-        throw new Error("投資信託の残高データがありません。", { cause: waitError });
+      // 合計行とログイン無効ダイアログのどちらかが表示されるまで待つ
+      await totalRow.or(loginInvalidDialog).first().waitFor({ state: "visible", timeout: 30000 });
+      // 合計行が表示された場合は、データなし表示が消えるまで待つ
+      if (!(await isLoginInvalid())) {
+        await noRecord.waitFor({ state: "detached", timeout: 30000 });
       }
-      throw waitError;
+    } catch (error) {
+      waitError = error;
     }
 
-    return newPage;
+    if (await isLoginInvalid()) throw new SessionTimeoutError();
+    if (waitError !== undefined) throw waitError;
   }
 
   async scrapeAssets(page: Page): Promise<Position> {
