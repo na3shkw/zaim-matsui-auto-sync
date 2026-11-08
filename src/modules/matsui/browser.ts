@@ -50,14 +50,22 @@ export async function openBrowser(
     }
   }
 
-  // ランダムに表示されるポップアップスクリプトをブロック
-  await browserContext.route(/\/Rtoaster(\.Popup)?\.js(\?.*)?$/, (route) =>
-    route.fulfill({
-      status: 200,
-      contentType: "application/javascript",
-      body: "// blocked",
-    }),
-  );
+  // 画面操作の妨げになるスクリプトをブロック
+  const blockedScriptPatterns = [
+    // ランダムに表示されるポップアップ
+    /\/Rtoaster(\.Popup)?\.js(\?.*)?$/,
+    // KARTE が表示する要素がボタンに重なり、クリックできなくなる
+    /^https:\/\/[^/]+\.karte\.io\//,
+  ];
+  for (const pattern of blockedScriptPatterns) {
+    await browserContext.route(pattern, (route) =>
+      route.fulfill({
+        status: 200,
+        contentType: "application/javascript",
+        body: "// blocked",
+      }),
+    );
+  }
 
   const page = browserContext.pages()[0];
   if (!page) {
