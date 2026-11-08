@@ -15,3 +15,17 @@ updates:
    directory: "/"
    schedule:
      interval: weekly
+
+ # npm はセキュリティアップデートのみ PR を作成する（バージョンアップデートは無効化）
+ - package-ecosystem: "npm"
+   directory: "/"
+   schedule:
+     interval: weekly
+   open-pull-requests-limit: 0
+   groups:
+     # vitest 関連パッケージは相互に完全一致のバージョンを要求するため、まとめて更新する
+     vitest:
+       applies-to: security-updates
+       patterns:
+         - "vitest"
+         - "@vitest/*"
