@@ -3,10 +3,31 @@ import { Command } from "commander";
 import { loadConfig } from "../modules/config.js";
 import { configureLogger, logger, MatsuiScraper, Zaim } from "../modules/index.js";
 import { LoginMethodFactory } from "../modules/matsui/login-methods/index.js";
+import {
+  ZaimApiRegistrar,
+  type ZaimRegistrar,
+} from "../modules/sync/zaim-registrar.js";
 import { MatsuiZaimSyncService } from "../modules/sync/sync-service.js";
 import { TotalAmountRepository } from "../modules/sync/total-amount-repository.js";
+import { ZaimWebRegistrar } from "../modules/zaim-web/client.js";
 
-const { ZAIM_TOTAL_AMOUNT_FILE, MATSUI_LOGIN_METHOD } = process.env;
+const { ZAIM_TOTAL_AMOUNT_FILE, MATSUI_LOGIN_METHOD, ZAIM_REGISTER_METHOD } = process.env;
+
+/**
+ * 環境変数 ZAIM_REGISTER_METHOD に応じた収入登録方式を生成する
+ */
+function createZaimRegistrar(): ZaimRegistrar {
+  switch (ZAIM_REGISTER_METHOD ?? "api") {
+    case "api":
+      return new ZaimApiRegistrar(new Zaim());
+    case "web":
+      return new ZaimWebRegistrar();
+    default:
+      throw new Error(
+        `環境変数 ZAIM_REGISTER_METHOD の値が不正です（api または web を指定してください）: ${ZAIM_REGISTER_METHOD}`,
+      );
+  }
+}
 
 const program = new Command();
 
@@ -32,12 +53,12 @@ program
         MATSUI_LOGIN_METHOD === "passkey" ? "passkey" : "password",
       );
       const totalAmountRepo = new TotalAmountRepository(ZAIM_TOTAL_AMOUNT_FILE);
-      const zaimClient = new Zaim();
+      const zaimRegistrar = createZaimRegistrar();
       const syncService = new MatsuiZaimSyncService(
         scraper,
         loginMethod,
         totalAmountRepo,
-        zaimClient,
+        zaimRegistrar,
       );
 
       // 同期実行

@@ -35,6 +35,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ### Zaim モジュール
 
+Zaim への収入登録は `sync/zaim-registrar.ts` の `ZaimRegistrar` で抽象化しており、`ZAIM_REGISTER_METHOD`（`api` | `web`、既定 `api`）で切り替える。`web` は `zaim-web/` の `ZaimWebRegistrar` がくふうアカウント（メール・パスワード＋TOTP、`zaim-web/totp.ts` で生成）でログインし、`/money/new?toggle=income` を操作する。金額欄は読み取り専用の電卓入力のため paste イベントで入力する。セレクタは `zaim-web/selectors.ts` に集約し、画面調査には `zaim-cli web inspect`（headed ブラウザでの手動操作中の HTML・スクショ・登録リクエストを保存）を使う。Zaim 単体の動作確認は `zaim-cli web login` / `zaim-cli web register-income --dry-run`（送信ボタンを押さない）で行う。
+
 `zaim/` は OAuth 1.0a の自前実装。アクセストークンは `ZAIM_ACCESS_TOKEN_FILE` に保存し、初回取得は `zaim-cli auth setup-token` で行う。認証フローのシーケンス図は `src/modules/zaim/README.md` に記載。
 
 ## 慣習

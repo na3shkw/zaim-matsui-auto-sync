@@ -9,7 +9,7 @@ import { SessionTimeoutError } from "../matsui/errors.js";
 import type { MatsuiLoginMethod } from "../matsui/login-methods/login-method.js";
 import type { MatsuiScraper } from "../matsui/scraper.js";
 import { StrategyFactory } from "../matsui/strategies/index.js";
-import type { Zaim } from "../zaim/client.js";
+import type { ZaimRegistrar } from "./zaim-registrar.js";
 import type { TotalAmountRepository } from "./total-amount-repository.js";
 
 const { ERROR_LOG_DIR } = process.env;
@@ -29,7 +29,7 @@ export class MatsuiZaimSyncService {
     private scraper: MatsuiScraper,
     private loginMethod: MatsuiLoginMethod,
     private totalAmountRepo: TotalAmountRepository,
-    private zaimClient: Zaim,
+    private zaimRegistrar: ZaimRegistrar,
   ) {}
 
   /**
@@ -111,6 +111,7 @@ export class MatsuiZaimSyncService {
       }
     } finally {
       await this.scraper.close();
+      await this.zaimRegistrar.close();
     }
   }
 
@@ -175,12 +176,12 @@ export class MatsuiZaimSyncService {
    *
    * @param page Playwrightのページオブジェクト
    * @param error 発生したエラー
-   * @param context コンテキスト情報（戦略タイプ）
+   * @param context コンテキスト情報（戦略タイプ・アカウント名）
    */
   private async captureErrorContext(
     page: Page | null,
     error: Error,
-    context: { strategyType?: string },
+    context: { strategyType?: string; accountName?: string },
   ): Promise<void> {
     try {
       // ERROR_LOG_DIR が未設定の場合はスキップ
@@ -215,6 +216,7 @@ export class MatsuiZaimSyncService {
         timestamp: dayjs().toISOString(),
         url,
         strategyType: context.strategyType || "N/A",
+        accountName: context.accountName || "N/A",
         error: {
           message: error.message,
           stack: error.stack,
@@ -283,14 +285,21 @@ export class MatsuiZaimSyncService {
       return;
     }
 
-    // Zaim APIにデータを送信
-    await this.zaimClient.registerIncomeJournalEntry({
-      categoryId: account.zaim.categoryId,
-      amount,
-      date: dayjs(),
-      toAccountId: account.zaim.accountId,
-      comment: "自動同期",
-    });
+    // Zaimにデータを登録
+    try {
+      await this.zaimRegistrar.registerIncome({
+        categoryId: account.zaim.categoryId,
+        amount,
+        date: dayjs(),
+        toAccountId: account.zaim.accountId,
+        comment: "自動同期",
+      });
+    } catch (error) {
+      await this.captureErrorContext(this.zaimRegistrar.activePage, error as Error, {
+        accountName: account.name,
+      });
+      throw error;
+    }
     logger.info(`${account.name}のZaimへの記録が完了しました。`);
 
     // 総額データに反映
