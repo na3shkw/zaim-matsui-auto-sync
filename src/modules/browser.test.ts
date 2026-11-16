@@ -4,7 +4,7 @@ import path from "path";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { deleteStorageState } from "./browser.js";
 
-vi.mock("../logger.js");
+vi.mock("./logger.js");
 
 describe("deleteStorageState", () => {
   let userDataDir: string;

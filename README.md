@@ -88,7 +88,11 @@ docker compose run --rm -e APP_COMMAND='zaim-cli' -e APP_ARGS='web login --prett
 docker compose run --rm -e APP_COMMAND='zaim-cli' -e APP_ARGS='web register-income --category-id <カテゴリID> --to-account-id <口座ID> --amount 1 --dry-run --pretty-log' app
 ```
 
-`--dry-run` を外すと実際に登録される。ブラウザで入力内容を目視確認したい場合は、`HEADLESS=false` と `--wait` を指定する（Docker では VNC 経由で確認する）。
+`--dry-run` を外すと実際に登録される。ブラウザで入力内容を目視確認したい場合は、`HEADLESS=false` と `--wait` を指定する。Docker では VNC サーバーを起動してポートを公開し、VNC 経由で確認する。
+
+```bash
+docker compose run --rm -e APP_COMMAND='zaim-cli' -e APP_ARGS='web register-income --category-id <カテゴリID> --to-account-id <口座ID> --amount 1 --dry-run --wait --pretty-log' -e HEADLESS=false -e ENABLE_VNC=1 --publish <ホスト側 VNC ポート>:5901 app
+```
 画面構造が変わって登録に失敗するようになった場合は、下記コマンドで画面ありのブラウザを VNC 経由で開き、手動で操作して画面の HTML・スクリーンショットと登録リクエストを保存する。
 保存先は `appdata/error-logs/zaim-inspect-<日時>/` となる。保存内容をもとに `src/modules/zaim-web/selectors.ts` を更新する。
 
@@ -194,7 +198,7 @@ docker compose run --rm -e APP_COMMAND='zaim-cli' -e APP_ARGS='category list --m
 docker compose run --rm -e APP_COMMAND='sync-matsui-zaim' app
 ```
 
-Zaim への記録を行わないドライランモードで実行したい場合は下記のコマンドを実行する。
+Zaim への記録と総額記録ファイルの更新を行わないドライランモードで実行したい場合は下記のコマンドを実行する。`ZAIM_REGISTER_METHOD=web` の場合は、ログインから入力フォームへの入力・検証まで（「入力する」ボタンを押す直前まで）を実際に行う。
 
 ```bash
 docker compose run --rm -e APP_COMMAND='sync-matsui-zaim' -e APP_ARGS='--dry-run' app

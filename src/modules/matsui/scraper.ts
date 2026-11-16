@@ -1,6 +1,7 @@
 import type { BrowserContext, Page } from "playwright";
 import { logger } from "../logger.js";
-import { deleteStorageState, getStorageStatePath, openBrowser, saveStorageState } from "./browser.js";
+import { PersistentBrowser } from "../browser.js";
+import { MATSUI_BLOCKED_SCRIPT_PATTERNS } from "./browser.js";
 import type { MatsuiLoginMethod } from "./login-methods/login-method.js";
 import { isSessionValid } from "./session.js";
 import type { AssetScrapingStrategy } from "./strategies/strategy-interface.js";
@@ -13,6 +14,7 @@ const { CHROMIUM_USER_DATA_DIR_MATSUI, HEADLESS } = process.env;
 export class MatsuiScraper {
   private loginMethod: MatsuiLoginMethod | null = null;
   private strategy: AssetScrapingStrategy<unknown> | null = null;
+  private browser: PersistentBrowser | null = null;
   private browserContext: BrowserContext | null = null;
   private page: Page | null = null;
   private lastScrapePage: Page | null = null;
@@ -42,16 +44,12 @@ export class MatsuiScraper {
       throw new Error("環境変数 CHROMIUM_USER_DATA_DIR_MATSUI が設定されていません。");
     }
 
-    const storageStatePath = getStorageStatePath(CHROMIUM_USER_DATA_DIR_MATSUI);
-    const { browserContext, page } = await openBrowser(
-      CHROMIUM_USER_DATA_DIR_MATSUI,
-      HEADLESS === "true",
-      storageStatePath,
-    );
-
-    if (storageStatePath) {
-      logger.info("保存されているストレージ状態を復元しました。");
-    }
+    this.browser = new PersistentBrowser(CHROMIUM_USER_DATA_DIR_MATSUI, {
+      headless: HEADLESS === "true",
+      restoreStorageState: true,
+      blockedScriptPatterns: MATSUI_BLOCKED_SCRIPT_PATTERNS,
+    });
+    const { browserContext, page } = await this.browser.open();
     this.browserContext = browserContext;
     this.page = page;
   }
@@ -119,32 +117,13 @@ export class MatsuiScraper {
    * ブラウザのCookieとストレージ状態ファイルを削除する（セッションタイムアウト後の再ログイン前に使用）
    */
   async clearSession(): Promise<void> {
-    if (this.browserContext) {
-      await this.browserContext.clearCookies();
-    }
-    if (CHROMIUM_USER_DATA_DIR_MATSUI) {
-      deleteStorageState(CHROMIUM_USER_DATA_DIR_MATSUI);
-    }
+    await this.browser?.clearSession();
   }
 
   /**
    * ブラウザを閉じてCookieを保存する
    */
   async close(): Promise<void> {
-    if (!this.browserContext) {
-      return;
-    }
-    try {
-      await saveStorageState(this.browserContext, CHROMIUM_USER_DATA_DIR_MATSUI!);
-    } catch (error) {
-      logger.error(error, "スクレイピング後のストレージ状態の保存中にエラーが発生しました。");
-    }
-    try {
-      logger.info("ブラウザコンテキストを閉じています。");
-      await this.browserContext.close();
-      logger.info("ブラウザコンテキストを閉じました。");
-    } catch (error) {
-      logger.error(error, "ブラウザコンテキストのクローズ中にエラーが発生しました。");
-    }
+    await this.browser?.close();
   }
 }

@@ -61,12 +61,13 @@ export function generateTotp(
 }
 
 /**
- * 現在のワンタイムパスワードの残り有効秒数を返す
+ * 現在のワンタイムパスワードの残り有効時間（ミリ秒）を返す
  *
  * @param timestamp 基準時刻（ミリ秒）
  * @param period 有効期間（秒）
- * @returns 残り秒数
+ * @returns 残り時間（ミリ秒）
  */
-export function getTotpRemainingSeconds(timestamp: number = Date.now(), period: number = 30): number {
-  return period - (Math.floor(timestamp / 1000) % period);
+export function getTotpRemainingMs(timestamp: number = Date.now(), period: number = 30): number {
+  const periodMs = period * 1000;
+  return periodMs - (timestamp % periodMs);
 }

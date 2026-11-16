@@ -6,11 +6,12 @@ import type { AssetScrapingStrategy } from "./strategies/strategy-interface.js";
 const { openBrowserMock } = vi.hoisted(() => ({ openBrowserMock: vi.fn() }));
 
 vi.mock("../logger.js");
-vi.mock("./browser.js", () => ({
-  openBrowser: openBrowserMock,
-  getStorageStatePath: vi.fn(),
-  saveStorageState: vi.fn(),
-  deleteStorageState: vi.fn(),
+vi.mock("../browser.js", () => ({
+  PersistentBrowser: class {
+    open = openBrowserMock;
+    close = vi.fn();
+    clearSession = vi.fn();
+  },
 }));
 
 // scraper.ts はモジュールトップで環境変数を参照するため、import 前に設定する

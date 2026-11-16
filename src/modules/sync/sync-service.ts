@@ -85,6 +85,10 @@ export class MatsuiZaimSyncService {
         }
       }
 
+      // 登録処理では松井証券のページを使わないため、スクレイピングが終わった時点でブラウザを閉じる
+      // （異常時のために finally でも閉じる。2回目以降の close() は何もしない）
+      await this.scraper.close();
+
       // 前回記録時点の総額を取得
       logger.info("総額記録ファイルを取得します。");
       const lastTotalAmounts = this.totalAmountRepo.load();
@@ -100,14 +104,6 @@ export class MatsuiZaimSyncService {
         const currentAmount = this.extractAmount(scrapedData, account.matsui);
 
         await this.processAccount(account, currentAmount, lastTotalAmounts, options.dryRun);
-      }
-
-      // 総額データを更新
-      if (options.dryRun) {
-        logger.info("ドライランモードのため総額データの更新は行いません。");
-      } else {
-        this.totalAmountRepo.save(lastTotalAmounts);
-        logger.info("総額データを更新しました。");
       }
     } finally {
       await this.scraper.close();
@@ -248,7 +244,10 @@ export class MatsuiZaimSyncService {
   }
 
   /**
-   * 個別アカウントの処理（差分計算とZaim記録）
+   * 個別アカウントの処理（差分計算・Zaim記録・総額記録ファイルの更新）
+   *
+   * 一部の口座だけ登録に成功した状態で後続の口座が失敗しても二重登録にならないよう、
+   * 登録に成功した口座ごとに総額記録ファイルを保存する。
    *
    * @param account アカウントの設定
    * @param currentAmount 現在の評価額
@@ -261,49 +260,59 @@ export class MatsuiZaimSyncService {
     lastTotalAmounts: LastTotalAmount[],
     dryRun: boolean,
   ): Promise<void> {
-    let lastTotalAmountItem = lastTotalAmounts.find(
+    const lastTotalAmountItem = lastTotalAmounts.find(
       (item) => item.accountId === account.zaim.accountId,
     );
-
     if (typeof lastTotalAmountItem === "undefined") {
       logger.info(
         `${account.name}の前回総額データがありません。初回実行時は前回総額を0として続行します。`,
       );
-      lastTotalAmountItem = {
-        amount: 0,
-        accountId: account.zaim.accountId,
-        updatedAt: dayjs().format(),
-      };
-      lastTotalAmounts.push(lastTotalAmountItem);
     }
 
-    const amount = currentAmount - lastTotalAmountItem.amount;
-    logger.info(`${account.name}の記録する金額は ${amount} 円です。`);
-
-    if (dryRun) {
-      logger.info("ドライランモードのためZaimへの記録は行いません。");
+    const amount = currentAmount - (lastTotalAmountItem?.amount ?? 0);
+    if (amount === 0) {
+      logger.info(`${account.name}は差分がないため記録をスキップします。`);
       return;
     }
+    logger.info(`${account.name}の記録する金額は ${amount} 円です。`);
 
-    // Zaimにデータを登録
+    // Zaimにデータを登録（ドライランの場合は、登録の直前までの処理を登録方式ごとに行う）
     try {
-      await this.zaimRegistrar.registerIncome({
-        categoryId: account.zaim.categoryId,
-        amount,
-        date: dayjs(),
-        toAccountId: account.zaim.accountId,
-        comment: "自動同期",
-      });
+      await this.zaimRegistrar.registerIncome(
+        {
+          categoryId: account.zaim.categoryId,
+          amount,
+          date: dayjs(),
+          toAccountId: account.zaim.accountId,
+          comment: "自動同期",
+        },
+        { dryRun },
+      );
     } catch (error) {
       await this.captureErrorContext(this.zaimRegistrar.activePage, error as Error, {
         accountName: account.name,
       });
       throw error;
     }
+
+    if (dryRun) {
+      logger.info("ドライランモードのため総額データの更新は行いません。");
+      return;
+    }
     logger.info(`${account.name}のZaimへの記録が完了しました。`);
 
-    // 総額データに反映
-    lastTotalAmountItem.amount = currentAmount;
-    lastTotalAmountItem.updatedAt = dayjs().format();
+    // 総額データに反映して保存
+    if (lastTotalAmountItem) {
+      lastTotalAmountItem.amount = currentAmount;
+      lastTotalAmountItem.updatedAt = dayjs().format();
+    } else {
+      lastTotalAmounts.push({
+        accountId: account.zaim.accountId,
+        amount: currentAmount,
+        updatedAt: dayjs().format(),
+      });
+    }
+    this.totalAmountRepo.save(lastTotalAmounts);
+    logger.info(`${account.name}の総額データを更新しました。`);
   }
 }

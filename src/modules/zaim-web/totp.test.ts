@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { decodeBase32, generateTotp, getTotpRemainingSeconds } from "./totp.js";
+import { decodeBase32, generateTotp, getTotpRemainingMs } from "./totp.js";
 
 // RFC 6238 Appendix B のテストベクタ（SHA1、シークレット "12345678901234567890"）
 const RFC_SECRET = "GEZDGNBVGY3TQOJQGEZDGNBVGY3TQOJQ";
@@ -37,10 +37,11 @@ describe("generateTotp", () => {
   });
 });
 
-describe("getTotpRemainingSeconds", () => {
-  it("有効期間内の残り秒数を返す", () => {
-    expect(getTotpRemainingSeconds(0)).toBe(30);
-    expect(getTotpRemainingSeconds(29_000)).toBe(1);
-    expect(getTotpRemainingSeconds(30_500)).toBe(30);
+describe("getTotpRemainingMs", () => {
+  it("有効期間内の残り時間をミリ秒単位で返す", () => {
+    expect(getTotpRemainingMs(0)).toBe(30_000);
+    expect(getTotpRemainingMs(29_000)).toBe(1_000);
+    expect(getTotpRemainingMs(29_900)).toBe(100);
+    expect(getTotpRemainingMs(30_500)).toBe(29_500);
   });
 });

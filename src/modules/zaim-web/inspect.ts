@@ -3,7 +3,7 @@ import path from "path";
 import type { Interface } from "readline";
 import type { Page, Request } from "playwright";
 import { logger } from "../logger.js";
-import { getStorageStatePath, openBrowser, saveStorageState } from "../matsui/browser.js";
+import { PersistentBrowser } from "../browser.js";
 import { ZaimWebPage } from "./page.js";
 
 /** 記録対象とするリクエストのHTTPメソッド */
@@ -122,11 +122,8 @@ export function shouldRecordRequest(method: string, url: string): boolean {
 export async function inspectZaimWeb({ userDataDir, outDir, input }: InspectOptions): Promise<void> {
   fs.mkdirSync(outDir, { recursive: true });
 
-  const { browserContext, page } = await openBrowser(
-    userDataDir,
-    false,
-    getStorageStatePath(userDataDir),
-  );
+  const browser = new PersistentBrowser(userDataDir, { headless: false, restoreStorageState: true });
+  const { browserContext, page } = await browser.open();
 
   let seq = 0;
   const snapshot = async (target: Page, label: string) => {
@@ -141,6 +138,12 @@ export async function inspectZaimWeb({ userDataDir, outDir, input }: InspectOpti
     }
   };
 
+  // ページ遷移と手動保存の画面保存が重なると、一時的なマスクの置換・復元が交錯して
+  // 金額が写る場合があるため、保存処理は1本のキューで直列に実行する
+  let queue: Promise<void> = Promise.resolve();
+  const enqueueSnapshot = (target: Page, label: string): Promise<void> =>
+    (queue = queue.then(() => snapshot(target, label)));
+
   const requestLog = path.join(outDir, "requests.jsonl");
   browserContext.on("request", (req: Request) => {
     if (!shouldRecordRequest(req.method(), req.url())) return;
@@ -152,7 +155,7 @@ export async function inspectZaimWeb({ userDataDir, outDir, input }: InspectOpti
   });
 
   page.on("framenavigated", (frame) => {
-    if (frame === page.mainFrame()) void snapshot(page, "nav");
+    if (frame === page.mainFrame()) void enqueueSnapshot(page, "nav");
   });
 
   try {
@@ -172,12 +175,11 @@ export async function inspectZaimWeb({ userDataDir, outDir, input }: InspectOpti
 
     for await (const line of input) {
       if (line.trim() === "q") break;
-      await snapshot(browserContext.pages().at(-1) ?? page, "manual");
+      await enqueueSnapshot(browserContext.pages().at(-1) ?? page, "manual");
     }
-
-    await saveStorageState(browserContext, userDataDir);
-    logger.info("セッションを保存しました。");
   } finally {
-    await browserContext.close();
+    // 保存待ちの画面をすべて保存してから閉じる（手動ログインしたセッションも保存される）
+    await queue;
+    await browser.close();
   }
 }

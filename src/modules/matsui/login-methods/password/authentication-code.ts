@@ -3,7 +3,7 @@ import dayjs from "dayjs";
 import customParseFormat from "dayjs/plugin/customParseFormat.js";
 import type { BrowserContext, Page } from "playwright";
 import { logger } from "../../../logger.js";
-import { openBrowser } from "../../browser.js";
+import { openBrowser } from "../../../browser.js";
 
 dayjs.extend(customParseFormat);
 
@@ -94,10 +94,9 @@ export async function getAuthenticationCode(): Promise<MatsuiAuthenticationCode>
 
   try {
     let page: Page | undefined = undefined;
-    ({ browserContext, page } = await openBrowser(
-      CHROMIUM_USER_DATA_DIR_GOOGLE,
-      HEADLESS === "true"
-    ));
+    ({ browserContext, page } = await openBrowser(CHROMIUM_USER_DATA_DIR_GOOGLE, {
+      headless: HEADLESS === "true",
+    }));
 
     for (let attempt = 1; attempt <= MAX_RETRY_ATTEMPTS; attempt++) {
       try {

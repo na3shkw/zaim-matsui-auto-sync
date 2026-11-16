@@ -10,6 +10,12 @@ export const KufuLoginSelector = {
   email: "#email",
   password: "#password",
   submit: "#login-button",
+  /**
+   * ログイン失敗時のエラーメッセージ
+   *
+   * エラー画面の構造は未調査のため、一般的なエラー表示の要素を指定している（取得できなくても処理は継続する）。
+   */
+  errorMessage: '[role="alert"], [class*="error"]',
 } as const;
 
 /** くふうアカウントの2段階認証画面（/signin/totp） */

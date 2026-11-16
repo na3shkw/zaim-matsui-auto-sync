@@ -1,8 +1,8 @@
 import type { Dayjs } from "dayjs";
-import type { BrowserContext, Dialog, Locator, Page } from "playwright";
+import type { Dialog, Locator, Page } from "playwright";
+import { PersistentBrowser } from "../browser.js";
 import { logger } from "../logger.js";
-import { getStorageStatePath, openBrowser, saveStorageState } from "../matsui/browser.js";
-import type { ZaimRegistrar } from "../sync/zaim-registrar.js";
+import type { RegisterIncomeOptions, ZaimRegistrar } from "../sync/zaim-registrar.js";
 import type { RegisterIncomeJournalEntryParam } from "../zaim/types.js";
 import { isZaimSessionValid, loginToZaim } from "./login.js";
 import { ZaimWebPage } from "./page.js";
@@ -42,13 +42,9 @@ export function isSameDateDisplay(displayValue: string, date: Dayjs): boolean {
  * storage-state.json に保存して次回以降も再利用する。
  */
 export class ZaimWebRegistrar implements ZaimRegistrar {
-  private browserContext: BrowserContext | null = null;
+  private browser: PersistentBrowser | null = null;
   private page: Page | null = null;
-
-  /**
-   * @param options.submit false の場合、フォームの入力と検証までを行い「入力する」ボタンは押さない（動作確認用）
-   */
-  constructor(private options: { submit?: boolean } = {}) {}
+  private loggedIn = false;
 
   get activePage(): Page | null {
     return this.page && !this.page.isClosed() ? this.page : null;
@@ -56,40 +52,35 @@ export class ZaimWebRegistrar implements ZaimRegistrar {
 
   /**
    * ブラウザを起動し、セッションが無効であればログインしてセッションを保存する
-   */
-  async login(): Promise<void> {
-    await this.ensureLoggedIn();
-  }
-
-  /**
-   * ブラウザを起動し、必要に応じてログインする
+   *
+   * ログイン済みの場合は何もしない。ログインに失敗した場合は、次回の呼び出しで再度ログインを試みる。
    *
    * @returns 操作対象のページ
    */
-  private async ensureLoggedIn(): Promise<Page> {
-    if (this.page) return this.page;
+  async login(): Promise<Page> {
+    if (this.page && this.loggedIn) return this.page;
 
-    if (!CHROMIUM_USER_DATA_DIR_ZAIM) {
-      throw new Error("環境変数 CHROMIUM_USER_DATA_DIR_ZAIM が設定されていません。");
+    if (!this.browser || !this.page) {
+      if (!CHROMIUM_USER_DATA_DIR_ZAIM) {
+        throw new Error("環境変数 CHROMIUM_USER_DATA_DIR_ZAIM が設定されていません。");
+      }
+      this.browser = new PersistentBrowser(CHROMIUM_USER_DATA_DIR_ZAIM, {
+        headless: HEADLESS === "true",
+        restoreStorageState: true,
+      });
+      ({ page: this.page } = await this.browser.open());
     }
 
-    const { browserContext, page } = await openBrowser(
-      CHROMIUM_USER_DATA_DIR_ZAIM,
-      HEADLESS === "true",
-      getStorageStatePath(CHROMIUM_USER_DATA_DIR_ZAIM),
-    );
-    this.browserContext = browserContext;
-    this.page = page;
-
     logger.info("Zaim のセッションの有効性をチェックします。");
-    if (await isZaimSessionValid(page)) {
+    if (await isZaimSessionValid(this.page)) {
       logger.info("Zaim の既存のセッションを使用します。");
     } else {
       logger.info("Zaim のセッションが無効なため、ログインを実行します。");
-      await loginToZaim(page);
-      await saveStorageState(browserContext, CHROMIUM_USER_DATA_DIR_ZAIM);
+      await loginToZaim(this.page);
+      await this.browser.saveState();
     }
-    return page;
+    this.loggedIn = true;
+    return this.page;
   }
 
   /**
@@ -149,8 +140,11 @@ export class ZaimWebRegistrar implements ZaimRegistrar {
     }
   }
 
-  async registerIncome(params: RegisterIncomeJournalEntryParam): Promise<void> {
-    const page = await this.ensureLoggedIn();
+  async registerIncome(
+    params: RegisterIncomeJournalEntryParam,
+    { dryRun = false }: RegisterIncomeOptions = {},
+  ): Promise<void> {
+    const page = await this.login();
     await page.goto(ZaimWebPage.moneyNewIncome);
 
     const form = page.locator(IncomeFormSelector.form);
@@ -183,20 +177,19 @@ export class ZaimWebRegistrar implements ZaimRegistrar {
     }
     logger.info("Zaim の入力画面に収入の内容を入力しました。");
 
-    if (this.options.submit === false) {
-      logger.info("送信しない設定のため、「入力する」ボタンは押さずに終了します。");
+    if (dryRun) {
+      logger.info("ドライランのため「入力する」ボタンは押さず、Zaim への登録は行いません。");
       return;
     }
 
     // 入力値の検証エラーは alert ダイアログで通知され、ページは遷移しない
-    let onDialog: ((dialog: Dialog) => Promise<void>) | undefined;
-    const dialogMessage = new Promise<string>((resolve) => {
-      onDialog = async (dialog) => {
-        resolve(dialog.message());
-        await dialog.dismiss();
-      };
-      page.once("dialog", onDialog);
-    });
+    let resolveDialog!: (message: string) => void;
+    const dialogMessage = new Promise<string>((resolve) => (resolveDialog = resolve));
+    const onDialog = async (dialog: Dialog) => {
+      resolveDialog(dialog.message());
+      await dialog.dismiss();
+    };
+    page.once("dialog", onDialog);
 
     const successAlert = page.locator(IncomeFormSelector.successAlert, {
       hasText: INCOME_REGISTERED_MESSAGE,
@@ -225,7 +218,7 @@ export class ZaimWebRegistrar implements ZaimRegistrar {
         throw result.error;
       }
     } finally {
-      if (onDialog) page.off("dialog", onDialog);
+      page.off("dialog", onDialog);
     }
     if (!(await successAlert.isVisible())) {
       const message = (await errorAlert.first().textContent())?.trim() ?? "";
@@ -235,10 +228,9 @@ export class ZaimWebRegistrar implements ZaimRegistrar {
   }
 
   async close(): Promise<void> {
-    if (this.browserContext) {
-      await this.browserContext.close();
-    }
-    this.browserContext = null;
+    await this.browser?.close();
+    this.browser = null;
     this.page = null;
+    this.loggedIn = false;
   }
 }
