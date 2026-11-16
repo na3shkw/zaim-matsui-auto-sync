@@ -105,9 +105,9 @@ export class ZaimWebRegistrar implements ZaimRegistrar {
    * @param label エラーメッセージ用の項目名
    */
   private async selectById(select: Locator, value: number, label: string): Promise<void> {
-    const values = await select.locator("option").evaluateAll((options) =>
-      options.map((option) => (option as HTMLOptionElement).value),
-    );
+    const values = await select
+      .locator("option")
+      .evaluateAll((options) => options.map((option) => (option as HTMLOptionElement).value));
     if (!values.includes(String(value))) {
       throw new Error(`Zaim の入力画面の「${label}」に ID ${value} の選択肢がありません。`);
     }

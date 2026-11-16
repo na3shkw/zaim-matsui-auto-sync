@@ -68,7 +68,9 @@ export class MatsuiZaimSyncService {
             data = await this.scraper.scrape();
           } catch (scrapeError) {
             if (!(scrapeError instanceof SessionTimeoutError)) throw scrapeError;
-            logger.warn("セッションタイムアウトエラーを検知しました。セッションをクリアして再ログインします。");
+            logger.warn(
+              "セッションタイムアウトエラーを検知しました。セッションをクリアして再ログインします。",
+            );
             await this.scraper.clearSession();
             await this.scraper.authenticate();
             logger.info("再ログインが完了しました。スクレイピングをリトライします。");

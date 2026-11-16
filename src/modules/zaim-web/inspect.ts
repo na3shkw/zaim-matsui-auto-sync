@@ -119,10 +119,17 @@ export function shouldRecordRequest(method: string, url: string): boolean {
  *
  * @param options 調査の設定
  */
-export async function inspectZaimWeb({ userDataDir, outDir, input }: InspectOptions): Promise<void> {
+export async function inspectZaimWeb({
+  userDataDir,
+  outDir,
+  input,
+}: InspectOptions): Promise<void> {
   fs.mkdirSync(outDir, { recursive: true });
 
-  const browser = new PersistentBrowser(userDataDir, { headless: false, restoreStorageState: true });
+  const browser = new PersistentBrowser(userDataDir, {
+    headless: false,
+    restoreStorageState: true,
+  });
   const { browserContext, page } = await browser.open();
 
   let seq = 0;

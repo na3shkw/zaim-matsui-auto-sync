@@ -41,7 +41,11 @@ function getStorageStatePath(userDataDir: string): string {
  */
 export async function openBrowser(
   userDataDir: string,
-  { headless = true, restoreStorageState = false, blockedScriptPatterns = [] }: OpenBrowserOptions = {},
+  {
+    headless = true,
+    restoreStorageState = false,
+    blockedScriptPatterns = [],
+  }: OpenBrowserOptions = {},
 ): Promise<OpenedBrowser> {
   const browserContext = await chromium.launchPersistentContext(userDataDir, {
     headless,

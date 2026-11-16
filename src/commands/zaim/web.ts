@@ -16,7 +16,9 @@ export const webCommand = new Command("web").description(
 
 webCommand
   .command("login")
-  .description("Zaim にログインし、セッションを保存する（保存済みのセッションが有効な場合はそれを使用する）")
+  .description(
+    "Zaim にログインし、セッションを保存する（保存済みのセッションが有効な場合はそれを使用する）",
+  )
   .option("--pretty-log", "整形されたログを出力する", false)
   .action(async (options) => {
     const registrar = new ZaimWebRegistrar();

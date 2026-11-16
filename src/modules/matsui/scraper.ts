@@ -1,6 +1,6 @@
 import type { BrowserContext, Page } from "playwright";
-import { logger } from "../logger.js";
 import { PersistentBrowser } from "../browser.js";
+import { logger } from "../logger.js";
 import { MATSUI_BLOCKED_SCRIPT_PATTERNS } from "./browser.js";
 import type { MatsuiLoginMethod } from "./login-methods/login-method.js";
 import { isSessionValid } from "./session.js";

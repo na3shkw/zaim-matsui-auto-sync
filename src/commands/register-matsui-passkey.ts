@@ -34,7 +34,10 @@ program
           );
         }
 
-        const credentialFile = path.join(CHROMIUM_USER_DATA_DIR_MATSUI, PASSKEY_CREDENTIAL_FILENAME);
+        const credentialFile = path.join(
+          CHROMIUM_USER_DATA_DIR_MATSUI,
+          PASSKEY_CREDENTIAL_FILENAME,
+        );
 
         browser = new PersistentBrowser(CHROMIUM_USER_DATA_DIR_MATSUI, {
           headless: false,
