@@ -66,8 +66,45 @@ Google メッセージへのアクセスをスムーズに行うため、事前�
     docker compose run --rm -e APP_COMMAND='login-google' -e APP_ARGS='https://messages.google.com/web/' --publish <ホスト側 VNC ポート>:5901 app
     ```
 
+### Zaim のウェブ画面から登録する場合の設定
+
+Zaim API は 2026年12月7日に提供終了するため、Zaim のウェブ画面を操作して収入を登録する方式（`ZAIM_REGISTER_METHOD=web`）を利用できる。
+`.env` に下記を設定する。
+
+- `ZAIM_REGISTER_METHOD=web`
+- `ZAIM_EMAIL` / `ZAIM_PASSWORD`: くふうアカウントのメールアドレスとパスワード
+- `ZAIM_TOTP_SECRET`: くふうアカウントの2段階認証（認証アプリ）を設定する際に表示されるシークレットキー（2段階認証を有効にしていない場合は不要）
+
+ログインセッションは `CHROMIUM_USER_DATA_DIR_ZAIM` に保存され、次回以降の実行で再利用される。
+ウェブ画面からの登録は当日の日付のみに対応している。
+
+松井証券の処理を行わずに Zaim のウェブ画面の操作だけを確認するには、`zaim-cli web` コマンドを使用する。
+
+```bash
+# ログインしてセッションを保存する（2段階認証の設定確認にも使える）
+docker compose run --rm -e APP_COMMAND='zaim-cli' -e APP_ARGS='web login --pretty-log' app
+
+# 入力と検証までを行い、「入力する」ボタンは押さない（Zaim には登録されない）
+docker compose run --rm -e APP_COMMAND='zaim-cli' -e APP_ARGS='web register-income --category-id <カテゴリID> --to-account-id <口座ID> --amount 1 --dry-run --pretty-log' app
+```
+
+`--dry-run` を外すと実際に登録される。ブラウザで入力内容を目視確認したい場合は、`HEADLESS=false` と `--wait` を指定する。Docker では VNC サーバーを起動してポートを公開し、VNC 経由で確認する。
+
+```bash
+docker compose run --rm -e APP_COMMAND='zaim-cli' -e APP_ARGS='web register-income --category-id <カテゴリID> --to-account-id <口座ID> --amount 1 --dry-run --wait --pretty-log' -e HEADLESS=false -e ENABLE_VNC=1 --publish <ホスト側 VNC ポート>:5901 app
+```
+画面構造が変わって登録に失敗するようになった場合は、下記コマンドで画面ありのブラウザを VNC 経由で開き、手動で操作して画面の HTML・スクリーンショットと登録リクエストを保存する。
+保存先は `appdata/error-logs/zaim-inspect-<日時>/` となる。保存内容をもとに `src/modules/zaim-web/selectors.ts` を更新する。
+
+```bash
+docker compose run --rm -e APP_COMMAND='zaim-cli' -e APP_ARGS='web inspect --pretty-log' -e ENABLE_VNC=1 --publish <ホスト側 VNC ポート>:5901 app
+```
+
+`requests.jsonl` には CSRF トークン等が含まれるため、共有する際は注意する（くふうアカウントへのリクエストはパスワードを含むため記録しない）。
+
 ### Zaim API のアクセストークンを取得する
 
+`ZAIM_REGISTER_METHOD=api`（デフォルト）で Zaim API を利用する場合のみ必要。
 下記コマンドを実行し、コマンドラインの指示に従って認証する。
 
 ```bash
@@ -124,6 +161,7 @@ docker compose run --rm -e APP_COMMAND='zaim-cli' -e APP_ARGS='auth setup-token'
 この値は同期先の Zaim の口座 ID を指定するもの。
 下記コマンドを実行して口座 ID 一覧を取得し、記録先の口座 ID を設定する。
 異なる松井証券の口座の同期先として Zaim の同じ口座 ID は設定できないことに注意する。
+口座 ID・カテゴリ ID は Zaim のウェブ画面の入力フォームでも同じ値が使われているため、登録方式によらず共通である。
 
 ```bash
 docker compose run --rm -e APP_COMMAND='zaim-cli' -e APP_ARGS='account list' app
@@ -160,7 +198,7 @@ docker compose run --rm -e APP_COMMAND='zaim-cli' -e APP_ARGS='category list --m
 docker compose run --rm -e APP_COMMAND='sync-matsui-zaim' app
 ```
 
-Zaim への記録を行わないドライランモードで実行したい場合は下記のコマンドを実行する。
+Zaim への記録と総額記録ファイルの更新を行わないドライランモードで実行したい場合は下記のコマンドを実行する。`ZAIM_REGISTER_METHOD=web` の場合は、ログインから入力フォームへの入力・検証まで（「入力する」ボタンを押す直前まで）を実際に行う。
 
 ```bash
 docker compose run --rm -e APP_COMMAND='sync-matsui-zaim' -e APP_ARGS='--dry-run' app

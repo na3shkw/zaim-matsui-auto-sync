@@ -15,7 +15,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ### 全体の流れ（`src/modules/sync/sync-service.ts`）
 
-`src/commands/sync-matsui-zaim.ts` で依存関係を組み立て、`MatsuiZaimSyncService.sync()` に注入する（設定 → Scraper → LoginMethod → TotalAmountRepository → ZaimRegistrar）。処理の仕様は以下の通り:
+`src/commands/sync-matsui-zaim.ts` で依存関係を組み立て、`MatsuiZaimSyncService.sync()` に注入する（設定 → Scraper → LoginMethod → TotalAmountRepository → ZaimRegistrar。ZaimRegistrar は `ZAIM_REGISTER_METHOD` に応じて `createZaimRegistrar()` が生成する）。処理の仕様は以下の通り:
 
 1. 有効な口座を `matsui.type`（戦略タイプ）でグルーピングし、同一戦略のスクレイピングは 1 回のみ実行して結果を共有する。
 2. 記録する金額は **現在の評価額 − 総額記録ファイルの前回値** とする。
@@ -34,10 +34,12 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - `modules/browser.ts` にて `chromium.launchPersistentContext`（`channel: "chromium"`, `--single-process`）を使用し、ユーザーデータディレクトリを保持・再利用する。`launchPersistentContext` は `storageState` 非対応のため、Cookie は `storage-state.json` に保存し `addCookies()` で復元する。ポップアップ用の `Rtoaster*.js` はルートで無効化する。
 - ストレージ状態の保存は、ログイン方式ではなく `MatsuiScraper.authenticate()` がログイン成功後に `saveState()` で行う。
 - スクレイピング中に `SessionTimeoutError`（`throwIfSessionTimeout()` が iframe 内文言から判定）が発生した場合のみ、`clearSession()` → 再ログイン → 1 回のリトライを実行する。
-- URL は直書きせず、`matsui/page.ts` の `MatsuiPage`（Zaim 側は `zaim/endpoints.ts` の `Endpoint`）の静的 getter を参照する。URL の結合には `utils.ts` の `joinUrl()` を使う。
+- URL は直書きせず、`matsui/page.ts` の `MatsuiPage`（Zaim API は `zaim/endpoints.ts` の `Endpoint`、Zaim のウェブ画面は `zaim-web/page.ts` の `ZaimWebPage`）の静的 getter を参照する。URL の結合には `utils.ts` の `joinUrl()` を使う。
 - 戦略の実行失敗時および収入登録の失敗時は、`ERROR_LOG_DIR/<timestamp>/` にスクリーンショット・HTML・metadata.json を出力する。
 
 ### Zaim モジュール
+
+Zaim への収入登録は `sync/zaim-registrar.ts` の `ZaimRegistrar` で抽象化しており、`ZAIM_REGISTER_METHOD`（`api` | `web`、既定 `api`）で切り替える。`web` は `zaim-web/` の `ZaimWebRegistrar` がくふうアカウント（メール・パスワード＋TOTP、`zaim-web/totp.ts` で生成）でログインし、`/money/new?toggle=income` を操作する。金額欄は読み取り専用の電卓入力のため paste イベントで入力する。セレクタは `zaim-web/selectors.ts` に集約し、画面調査には `zaim-cli web inspect`（headed ブラウザでの手動操作中の HTML・スクショ・登録リクエストを保存）を使う。Zaim 単体の動作確認は `zaim-cli web login` / `zaim-cli web register-income --dry-run`（送信ボタンを押さない）で行う。ログインは、ログイン画面に留まった場合はメールアドレス・パスワードの誤りとして、2段階認証画面に留まった場合は次の周期のコードで 1 回だけ再試行したうえでエラーにする。Zaim の実際のウェブ画面がないと検証できない処理（画面操作・ログイン）は自動テストの対象外とする（松井証券のスクレイピングと同じ方針）。
 
 `zaim/` は OAuth 1.0a の自前実装。アクセストークンは `ZAIM_ACCESS_TOKEN_FILE` に保存し、初回取得は `zaim-cli auth setup-token` で行う。認証フローのシーケンス図は `src/modules/zaim/README.md` に記載。
 
