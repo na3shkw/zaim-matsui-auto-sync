@@ -3,14 +3,22 @@ import type { Page } from "playwright";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { AssetScrapingStrategy } from "./strategies/strategy-interface.js";
 
-const { openBrowserMock } = vi.hoisted(() => ({ openBrowserMock: vi.fn() }));
+const { openBrowserMock, browserState } = vi.hoisted(() => ({
+  openBrowserMock: vi.fn(),
+  browserState: { context: null as unknown },
+}));
 
 vi.mock("../logger.js");
-vi.mock("./browser.js", () => ({
-  openBrowser: openBrowserMock,
-  getStorageStatePath: vi.fn(),
-  saveStorageState: vi.fn(),
-  deleteStorageState: vi.fn(),
+vi.mock("../browser.js", () => ({
+  PersistentBrowser: class {
+    open = openBrowserMock;
+    saveState = vi.fn();
+    get context() {
+      return browserState.context;
+    }
+    close = vi.fn();
+    clearSession = vi.fn();
+  },
 }));
 
 // scraper.ts はモジュールトップで環境変数を参照するため、import 前に設定する
@@ -27,6 +35,7 @@ describe("MatsuiScraper.activePage", () => {
 
   beforeEach(() => {
     browserContext = new EventEmitter();
+    browserState.context = browserContext;
     firstPage = createPageMock();
     openBrowserMock.mockResolvedValue({ browserContext, page: firstPage });
   });

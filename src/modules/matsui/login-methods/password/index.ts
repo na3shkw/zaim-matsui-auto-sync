@@ -1,11 +1,10 @@
 import type { Page } from "playwright";
 import { logger } from "../../../logger.js";
 import { getAuthenticationCode } from "./authentication-code.js";
-import { saveStorageState } from "../../browser.js";
 import { MatsuiPage } from "../../page.js";
 import type { MatsuiLoginMethod } from "../login-method.js";
 
-const { CHROMIUM_USER_DATA_DIR_MATSUI, MATSUI_LOGIN_ID, MATSUI_PASSWORD } = process.env;
+const { MATSUI_LOGIN_ID, MATSUI_PASSWORD } = process.env;
 
 /**
  * パスワード認証によるログイン実装
@@ -48,8 +47,5 @@ export class PasswordLoginMethod implements MatsuiLoginMethod {
       authButton.click(),
     ]);
     logger.info("認証ボタンをクリックしました。");
-
-    // ログイン成功後にストレージ状態を保存
-    await saveStorageState(page.context(), CHROMIUM_USER_DATA_DIR_MATSUI!);
   }
 }

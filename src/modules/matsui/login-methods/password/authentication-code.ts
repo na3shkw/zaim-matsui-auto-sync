@@ -3,7 +3,7 @@ import dayjs from "dayjs";
 import customParseFormat from "dayjs/plugin/customParseFormat.js";
 import type { BrowserContext, Page } from "playwright";
 import { logger } from "../../../logger.js";
-import { openBrowser } from "../../browser.js";
+import { openBrowser } from "../../../browser.js";
 
 dayjs.extend(customParseFormat);
 
@@ -86,7 +86,7 @@ async function findAuthenticationCode(page: Page): Promise<MatsuiAuthenticationC
 export async function getAuthenticationCode(): Promise<MatsuiAuthenticationCode> {
   if (!GOOGLE_MESSAGE_MATSUI_CONVERSATION_URL || !CHROMIUM_USER_DATA_DIR_GOOGLE) {
     throw new Error(
-      "環境変数 GOOGLE_MESSAGE_MATSUI_CONVERSATION_URL または CHROMIUM_USER_DATA_DIR_GOOGLE が設定されていません。"
+      "環境変数 GOOGLE_MESSAGE_MATSUI_CONVERSATION_URL または CHROMIUM_USER_DATA_DIR_GOOGLE が設定されていません。",
     );
   }
 
@@ -94,10 +94,9 @@ export async function getAuthenticationCode(): Promise<MatsuiAuthenticationCode>
 
   try {
     let page: Page | undefined = undefined;
-    ({ browserContext, page } = await openBrowser(
-      CHROMIUM_USER_DATA_DIR_GOOGLE,
-      HEADLESS === "true"
-    ));
+    ({ browserContext, page } = await openBrowser(CHROMIUM_USER_DATA_DIR_GOOGLE, {
+      headless: HEADLESS === "true",
+    }));
 
     for (let attempt = 1; attempt <= MAX_RETRY_ATTEMPTS; attempt++) {
       try {
@@ -143,14 +142,16 @@ export async function getAuthenticationCode(): Promise<MatsuiAuthenticationCode>
         if ((error as Error).name === "TimeoutError" && attempt < MAX_RETRY_ATTEMPTS) {
           const delay = RETRY_BASE_DELAY_SECONDS * Math.pow(2, attempt - 1);
           logger.warn(
-            `認証コードの取得中にタイムアウトが発生しました（試行 ${attempt}/${MAX_RETRY_ATTEMPTS}）。${delay} 秒後にリトライします。`
+            `認証コードの取得中にタイムアウトが発生しました（試行 ${attempt}/${MAX_RETRY_ATTEMPTS}）。${delay} 秒後にリトライします。`,
           );
           await new Promise((resolve) => setTimeout(resolve, delay * 1000));
           continue;
         }
 
         if ((error as Error).name === "TimeoutError") {
-          logger.error(`最大リトライ回数（${MAX_RETRY_ATTEMPTS}回）に達しました。認証コードの取得を中止します。`);
+          logger.error(
+            `最大リトライ回数（${MAX_RETRY_ATTEMPTS}回）に達しました。認証コードの取得を中止します。`,
+          );
         } else {
           logger.error(error, "認証コードの取得中にエラーが発生しました。");
         }
