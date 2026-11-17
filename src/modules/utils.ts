@@ -1,16 +1,28 @@
 import readline from "readline";
 
 /**
+ * 標準入力から読み取る readline インターフェースを生成する
+ *
+ * 複数行を続けて受け付ける場合に使用する。使用後は呼び出し側で close() すること。
+ *
+ * @param withOutput 標準出力にもプロンプトを出力するか（既定: false）
+ * @returns readline インターフェース
+ */
+export function createInputInterface(withOutput = false): readline.Interface {
+  return readline.createInterface({
+    input: process.stdin,
+    ...(withOutput ? { output: process.stdout } : {}),
+  });
+}
+
+/**
  * ユーザー入力を待機する
  *
  * @param question プロンプトとして表示する文字列
  * @returns 入力された文字列
  */
 export function getUserInput(question: string): Promise<string> {
-  const rl = readline.createInterface({
-    input: process.stdin,
-    output: process.stdout,
-  });
+  const rl = createInputInterface(true);
 
   return new Promise((resolve) => {
     rl.question(question, (answer) => {
