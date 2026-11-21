@@ -68,9 +68,9 @@ describe("parseNumber", () => {
 
 describe("joinUrl", () => {
   it("パスの先頭のスラッシュの有無にかかわらず、ベースURLとパスを1つのスラッシュで結合する", () => {
-    expect(joinUrl("https://zaim.net", "/money/new?toggle=income")).toBe(
-      "https://zaim.net/money/new?toggle=income",
+    expect(joinUrl("https://example.com", "/path/to/page?key=value")).toBe(
+      "https://example.com/path/to/page?key=value",
     );
-    expect(joinUrl("https://zaim.net", "home")).toBe("https://zaim.net/home");
+    expect(joinUrl("https://example.com", "home")).toBe("https://example.com/home");
   });
 });

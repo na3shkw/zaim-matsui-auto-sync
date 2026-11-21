@@ -29,7 +29,11 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ### セッションとブラウザ
 
-- `modules/browser.ts` にて `chromium.launchPersistentContext`（`channel: "chromium"`, `--single-process`）を使用し、ユーザーデータディレクトリを保持・再利用する。`launchPersistentContext` は `storageState` 非対応のため、Cookie は `storage-state.json` に保存し `addCookies()` で復元する（`restoreStorageState: true`）。起動・状態保存・終了は `PersistentBrowser` が担い、`close()` はストレージ状態を保存してから閉じる（例外はログのみで呼び出し元のエラーを上書きしない）。セッション確認とログインはサイトごとに実装する（松井証券は `MatsuiScraper.authenticate()` がログイン成功後に `saveState()` を呼ぶため、ログイン方式側でストレージ状態を保存する必要はない）。
+- `modules/browser.ts` の `PersistentBrowser` がブラウザの起動・状態保存・終了を担う。
+  - `chromium.launchPersistentContext`（`channel: "chromium"`, `--single-process`）を使用し、ユーザーデータディレクトリを保持・再利用する。
+  - `launchPersistentContext` は `storageState` 非対応のため、Cookie は `storage-state.json` に保存し `addCookies()` で復元する（`restoreStorageState: true`）。
+  - `close()` はストレージ状態を保存してから閉じる。例外はログのみで、呼び出し元のエラーを上書きしない。
+  - セッション確認とログインはサイトごとに実装する。松井証券は `MatsuiScraper.authenticate()` がログイン成功後に `saveState()` を呼ぶため、ログイン方式側でストレージ状態を保存する必要はない。
 - 松井証券の操作の妨げになるスクリプト（ポップアップ用の `Rtoaster*.js`、KARTE）は `matsui/browser.ts` の `MATSUI_BLOCKED_SCRIPT_PATTERNS` を `blockedScriptPatterns` に渡して無効化する。
 - スクレイピング中に `SessionTimeoutError`（`throwIfSessionTimeout()` が iframe 内文言から判定）が発生した場合のみ、`clearSession()` → 再ログイン → 1 回のリトライを実行する。
 - URL は直書きせず、`matsui/page.ts` の `MatsuiPage`（Zaim 側は `zaim/endpoints.ts` の `Endpoint`）の静的 getter を参照する。URL の結合には `utils.ts` の `joinUrl()` を使う。
