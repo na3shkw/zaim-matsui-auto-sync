@@ -15,7 +15,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ### 全体の流れ（`src/modules/sync/sync-service.ts`）
 
-`src/commands/sync-matsui-zaim.ts` で依存関係を組み立て、`MatsuiZaimSyncService.sync()` に注入する（設定 → Scraper → LoginMethod → TotalAmountRepository → ZaimRegistrar。ZaimRegistrar は `ZAIM_REGISTER_METHOD` に応じて `createZaimRegistrar()` が生成する）。処理の仕様は以下の通り:
+`src/commands/sync-matsui-zaim.ts` で依存関係を組み立て、`MatsuiZaimSyncService.sync()` に注入する（設定 → Scraper → LoginMethod → TotalAmountRepository → ZaimRegistrar）。処理の仕様は以下の通り:
 
 1. 有効な口座を `matsui.type`（戦略タイプ）でグルーピングし、同一戦略のスクレイピングは 1 回のみ実行して結果を共有する。
 2. 記録する金額は **現在の評価額 − 総額記録ファイルの前回値** とする。
@@ -39,7 +39,12 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ### Zaim モジュール
 
-Zaim への収入登録は `sync/zaim-registrar.ts` の `ZaimRegistrar` で抽象化しており、`ZAIM_REGISTER_METHOD`（`api` | `web`、既定 `api`）で切り替える。`web` は `zaim-web/` の `ZaimWebRegistrar` がくふうアカウント（メール・パスワード＋TOTP、`zaim-web/totp.ts` で生成）でログインし、`/money/new?toggle=income` を操作する。金額欄は読み取り専用の電卓入力のため paste イベントで入力する。セレクタは `zaim-web/selectors.ts` に集約し、画面調査には `zaim-cli web inspect`（headed ブラウザでの手動操作中の HTML・スクショ・登録リクエストを保存）を使う。Zaim 単体の動作確認は `zaim-cli web login` / `zaim-cli web register-income --dry-run`（送信ボタンを押さない）で行う。ログインは、ログイン画面に留まった場合はメールアドレス・パスワードの誤りとして、2段階認証画面に留まった場合は次の周期のコードで 1 回だけ再試行したうえでエラーにする。Zaim の実際のウェブ画面がないと検証できない処理（画面操作・ログイン）は自動テストの対象外とする（松井証券のスクレイピングと同じ方針）。
+Zaim への収入登録の方式は `ZAIM_REGISTER_METHOD`（`api` | `web`、既定 `api`）で切り替える。`web` 方式の注意点は以下の通り:
+
+- 金額欄は読み取り専用の電卓入力のため、paste イベントで入力する。
+- セレクタは `zaim-web/selectors.ts` に集約する。画面構造の調査には `zaim-cli web inspect`（手動操作中の HTML・スクショ・登録リクエストを保存する）を使う。
+- 単体の動作確認は `zaim-cli web login` / `zaim-cli web register-income --dry-run`（送信ボタンを押さない）で行う。
+- 実際のウェブ画面がないと検証できない処理（画面操作・ログイン）は自動テストの対象外とする（松井証券のスクレイピングと同じ方針）。
 
 `zaim/` は OAuth 1.0a の自前実装。アクセストークンは `ZAIM_ACCESS_TOKEN_FILE` に保存し、初回取得は `zaim-cli auth setup-token` で行う。認証フローのシーケンス図は `src/modules/zaim/README.md` に記載。
 
