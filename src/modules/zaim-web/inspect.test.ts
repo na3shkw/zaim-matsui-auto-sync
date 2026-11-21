@@ -24,25 +24,27 @@ describe("maskAmounts", () => {
 
 describe("buildSnapshotName", () => {
   it("連番・きっかけ・ホスト名・パスからファイル名を生成する", () => {
-    expect(buildSnapshotName(3, "nav", "https://id.kufu.jp/signin/totp?x=1")).toBe(
-      "03-nav-id.kufu.jp_signin_totp",
+    expect(buildSnapshotName(3, "nav", "https://login.example.com/signin/totp?x=1")).toBe(
+      "03-nav-login.example.com_signin_totp",
     );
   });
 
   it("120文字に切り詰める", () => {
-    const name = buildSnapshotName(1, "manual", `https://zaim.net/${"a".repeat(200)}`);
+    const name = buildSnapshotName(1, "manual", `https://example.com/${"a".repeat(200)}`);
     expect(name).toHaveLength(120);
   });
 });
 
 describe("shouldRecordRequest", () => {
+  const zaimOrigin = "https://example.com";
+
   it.each([
-    ["POST", "https://zaim.net/money", true],
-    ["PUT", "https://api.zaim.net/v2/home/money/1", true],
-    ["GET", "https://zaim.net/money/new", false],
-    ["POST", "https://id.kufu.jp/signin/basic", false],
-    ["POST", "https://evilzaim.net/money", false],
+    ["POST", "https://example.com/money", true],
+    ["PUT", "https://api.example.com/v2/home/money/1", true],
+    ["GET", "https://example.com/money/new", false],
+    ["POST", "https://login.example.net/signin/basic", false],
+    ["POST", "https://evilexample.com/money", false],
   ])("%s %s は記録対象: %s", (method, url, expected) => {
-    expect(shouldRecordRequest(method, url)).toBe(expected);
+    expect(shouldRecordRequest(method, url, zaimOrigin)).toBe(expected);
   });
 });

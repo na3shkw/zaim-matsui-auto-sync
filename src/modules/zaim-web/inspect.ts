@@ -99,11 +99,16 @@ export async function screenshotWithMaskedAmounts(page: Page, filePath: string):
  *
  * @param method HTTPメソッド
  * @param url リクエストURL
+ * @param zaimOrigin Zaim のオリジン（既定: 実際の Zaim。テストで差し替える）
  * @returns 記録対象であれば true
  */
-export function shouldRecordRequest(method: string, url: string): boolean {
+export function shouldRecordRequest(
+  method: string,
+  url: string,
+  zaimOrigin: string = ZaimWebPage.zaimOrigin,
+): boolean {
   const { hostname } = new URL(url);
-  const zaimHostname = new URL(ZaimWebPage.zaimOrigin).hostname;
+  const zaimHostname = new URL(zaimOrigin).hostname;
   return (
     (hostname === zaimHostname || hostname.endsWith(`.${zaimHostname}`)) &&
     RECORDED_METHODS.includes(method)
