@@ -18,7 +18,10 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 `src/commands/sync-matsui-zaim.ts` で依存関係を組み立て、`MatsuiZaimSyncService.sync()` に注入する（設定 → Scraper → LoginMethod → TotalAmountRepository → ZaimRegistrar）。処理の仕様は以下の通り:
 
 1. 有効な口座を `matsui.type`（戦略タイプ）でグルーピングし、同一戦略のスクレイピングは 1 回のみ実行して結果を共有する。
-2. 記録する金額は **現在の評価額 − 総額記録ファイルの前回値** とする（差分が 0 円の口座はスキップする）。Zaim に差分を収入として登録し、成功後に前回値を現在値へ更新して**口座ごとに**記録ファイルへ保存する（後続の口座が失敗しても二重登録にならないようにするため）。`--dry-run` 指定時も `ZaimRegistrar.registerIncome(params, { dryRun: true })` を呼び出すが、登録方式側で登録を行わず、記録ファイルも更新しない。ドライランの指定は `registerIncome()` の引数でのみ渡す（登録方式のインスタンスには持たせない）。
+2. 記録する金額は **現在の評価額 − 総額記録ファイルの前回値** とする。
+   - 差分が 0 円の口座はスキップする。
+   - Zaim に差分を収入として登録し、成功後に前回値を現在値へ更新して**口座ごとに**記録ファイルへ保存する（後続の口座が失敗しても二重登録にならないようにするため）。
+   - `--dry-run` 指定時も `ZaimRegistrar.registerIncome(params, { dryRun: true })` を呼び出すが、登録方式側で登録を行わず、記録ファイルも更新しない。ドライランの指定は `registerIncome()` の引数でのみ渡す（登録方式のインスタンスには持たせない）。
 
 前回値は `ZAIM_TOTAL_AMOUNT_FILE`（`appdata/zaim/zaim-total-amount.json`）に Zaim の `accountId` ごとに保存する。このファイルの損壊・巻き戻りは差分の不整合につながるため、ファイル操作は必ず `TotalAmountRepository` 経由で実行する。なお `config.json` では、Zod の `refine` により同一 `zaim.accountId` の重複を禁止している（同一 Zaim 口座への複数松井口座の集約は不可）。
 
