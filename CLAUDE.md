@@ -28,11 +28,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ### セッションとブラウザ
 
-- `modules/browser.ts` の `PersistentBrowser` がブラウザの起動・状態保存・終了を担う。
-  - `chromium.launchPersistentContext`（`channel: "chromium"`, `--single-process`）を使用し、ユーザーデータディレクトリを保持・再利用する。
-  - `launchPersistentContext` は `storageState` 非対応のため、Cookie は `storage-state.json` に保存し `addCookies()` で復元する（`restoreStorageState: true`）。
-  - セッション確認とログインはサイトごとに実装する。松井証券は `MatsuiScraper.authenticate()` がログイン成功後に `saveState()` を呼ぶため、ログイン方式側でストレージ状態を保存する必要はない。
-- ポップアップ用の `Rtoaster*.js` はルートで無効化する。
+- `modules/browser.ts` にて `chromium.launchPersistentContext`（`channel: "chromium"`, `--single-process`）を使用し、ユーザーデータディレクトリを保持・再利用する。`launchPersistentContext` は `storageState` 非対応のため、Cookie は `storage-state.json` に保存し `addCookies()` で復元する。ポップアップ用の `Rtoaster*.js` はルートで無効化する。
+- ストレージ状態の保存は、ログイン方式ではなく `MatsuiScraper.authenticate()` がログイン成功後に `saveState()` で行う。
 - スクレイピング中に `SessionTimeoutError`（`throwIfSessionTimeout()` が iframe 内文言から判定）が発生した場合のみ、`clearSession()` → 再ログイン → 1 回のリトライを実行する。
 - URL は直書きせず、`matsui/page.ts` の `MatsuiPage`（Zaim 側は `zaim/endpoints.ts` の `Endpoint`）の静的 getter を参照する。URL の結合には `utils.ts` の `joinUrl()` を使う。
 - 戦略の実行失敗時および収入登録の失敗時は、`ERROR_LOG_DIR/<timestamp>/` にスクリーンショット・HTML・metadata.json を出力する。
