@@ -54,8 +54,13 @@ export class PersistentBrowser {
    * ブラウザを起動する
    *
    * @returns ブラウザコンテキストと最初のページ
+   * @throws 起動済みの場合（前のコンテキストを閉じられなくなるため、close() してから呼び出す）
    */
   async open(): Promise<OpenedBrowser> {
+    if (this.browserContext) {
+      throw new Error("ブラウザは起動済みです。再度起動する場合は close() してください。");
+    }
+
     const {
       headless = true,
       restoreStorageState = false,
