@@ -3,7 +3,6 @@ services:
     image: ghcr.io/na3shkw/zaim-matsui-auto-sync:${IMAGE_TAG:-latest}
     environment:
       NODE_ENV: production
-      # Zaim に登録する日付を日本時間の当日にするため（ウェブ画面は日本時間の当日のみ登録できる）
       TZ: Asia/Tokyo
       CHROMIUM_USER_DATA_DIR_GOOGLE: /home/node/.config/appdata/chromium/google
       CHROMIUM_USER_DATA_DIR_MATSUI: /home/node/.config/appdata/chromium/matsui
