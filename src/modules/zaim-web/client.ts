@@ -2,7 +2,11 @@ import type { Dayjs } from "dayjs";
 import type { Dialog, Locator, Page } from "playwright";
 import { PersistentBrowser } from "../browser.js";
 import { logger } from "../logger.js";
-import type { RegisterIncomeOptions, ZaimRegistrar } from "../sync/zaim-registrar.js";
+import {
+  type RegisterIncomeOptions,
+  RegistrationUnconfirmedError,
+  type ZaimRegistrar,
+} from "../sync/zaim-registrar.js";
 import type { RegisterIncomeJournalEntryParam } from "../zaim/types.js";
 import { isZaimSessionValid, loginToZaim } from "./login.js";
 import { ZaimWebPage } from "./page.js";
@@ -18,6 +22,16 @@ const { CHROMIUM_USER_DATA_DIR_ZAIM, HEADLESS } = process.env;
 const SUBMIT_RESULT_TIMEOUT_MS = 30000;
 /** 登録結果の表示待ちで、ダイアログの確認を挟む間隔（ミリ秒） */
 const SUBMIT_RESULT_POLL_MS = 1000;
+
+/**
+ * 送信後に、登録されなかったこと（入力エラーのダイアログ・エラー表示）を確認できたことを表すエラー
+ */
+class RegistrationRejectedError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "RegistrationRejectedError";
+  }
+}
 
 /**
  * 金額欄の表示値（例: "1,234"、"-311"）を数値の文字列に正規化する
@@ -205,35 +219,70 @@ export class ZaimWebRegistrar implements ZaimRegistrar {
     });
     const errorAlert = page.locator(IncomeFormSelector.errorAlert);
     try {
+      // Playwright の click() は、操作可能になるのを待つ段階で失敗した場合はクリックしないため、
+      // ここでの失敗は送信前の失敗として扱う
       await form.locator(IncomeFormSelector.submit).click();
 
-      // 結果の表示を短い間隔で待ち、その間にダイアログが表示されていないかを確認する
-      // （待機を打ち切れないため、1 回の待機を短くして残留させない）
-      const resultAlert = successAlert.or(errorAlert).first();
-      const deadline = Date.now() + SUBMIT_RESULT_TIMEOUT_MS;
-      for (;;) {
-        if (dialogMessage !== undefined) {
-          throw new Error(`Zaim の入力画面で入力エラーが発生しました: ${dialogMessage}`);
-        }
-        if (Date.now() >= deadline) {
-          throw new Error("Zaim の登録結果が表示されるまでにタイムアウトしました。");
-        }
-        const shown = await resultAlert
-          .waitFor({ state: "visible", timeout: SUBMIT_RESULT_POLL_MS })
-          .then(
-            () => true,
-            () => false,
-          );
-        if (shown) break;
+      // 送信後は、登録されなかったことを確認できた場合（ダイアログ・エラー表示）を除き、
+      // 結果を確認できなければ登録済みの可能性があるものとして RegistrationUnconfirmedError とする
+      let succeeded: boolean;
+      try {
+        succeeded = await this.waitForSubmitResult(successAlert, errorAlert, () => dialogMessage);
+      } catch (error) {
+        if (error instanceof RegistrationRejectedError) throw error;
+        throw new RegistrationUnconfirmedError(
+          `Zaim への登録を送信しましたが、結果を確認できませんでした: ${(error as Error).message}`,
+          { cause: error },
+        );
+      }
+      if (!succeeded) {
+        const message = (await errorAlert.first().textContent())?.trim() ?? "";
+        throw new RegistrationRejectedError(`Zaim の入力画面で登録に失敗しました: ${message}`);
       }
     } finally {
       page.off("dialog", onDialog);
     }
-    if (!(await successAlert.isVisible())) {
-      const message = (await errorAlert.first().textContent())?.trim() ?? "";
-      throw new Error(`Zaim の入力画面で登録に失敗しました: ${message}`);
-    }
     logger.info("Zaim のウェブ画面から収入を登録しました。");
+  }
+
+  /**
+   * 「入力する」ボタン押下後の登録結果を待つ
+   *
+   * 結果の表示を短い間隔で待ち、その間にダイアログが表示されていないかを確認する
+   * （待機を打ち切れないため、1 回の待機を短くして残留させない）。
+   *
+   * @param successAlert 登録成功時のメッセージのロケーター
+   * @param errorAlert 登録失敗時のメッセージのロケーター
+   * @param getDialogMessage 表示されたダイアログのメッセージを返す関数
+   * @returns 成功のメッセージが表示されれば true、失敗のメッセージが表示されれば false
+   * @throws RegistrationRejectedError 入力エラーのダイアログが表示された場合
+   * @throws Error 結果が表示されないままタイムアウトした場合
+   */
+  private async waitForSubmitResult(
+    successAlert: Locator,
+    errorAlert: Locator,
+    getDialogMessage: () => string | undefined,
+  ): Promise<boolean> {
+    const resultAlert = successAlert.or(errorAlert).first();
+    const deadline = Date.now() + SUBMIT_RESULT_TIMEOUT_MS;
+    for (;;) {
+      const dialogMessage = getDialogMessage();
+      if (dialogMessage !== undefined) {
+        throw new RegistrationRejectedError(
+          `Zaim の入力画面で入力エラーが発生しました: ${dialogMessage}`,
+        );
+      }
+      if (Date.now() >= deadline) {
+        throw new Error("Zaim の登録結果が表示されるまでにタイムアウトしました。");
+      }
+      const shown = await resultAlert
+        .waitFor({ state: "visible", timeout: SUBMIT_RESULT_POLL_MS })
+        .then(
+          () => true,
+          () => false,
+        );
+      if (shown) return successAlert.isVisible();
+    }
   }
 
   async close(): Promise<void> {

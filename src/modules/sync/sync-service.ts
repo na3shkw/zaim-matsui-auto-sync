@@ -9,7 +9,7 @@ import { SessionTimeoutError } from "../matsui/errors.js";
 import type { MatsuiLoginMethod } from "../matsui/login-methods/login-method.js";
 import type { MatsuiScraper } from "../matsui/scraper.js";
 import { StrategyFactory } from "../matsui/strategies/index.js";
-import type { ZaimRegistrar } from "./zaim-registrar.js";
+import { RegistrationUnconfirmedError, type ZaimRegistrar } from "./zaim-registrar.js";
 import type { TotalAmountRepository } from "./total-amount-repository.js";
 
 const { ERROR_LOG_DIR } = process.env;
@@ -263,6 +263,7 @@ export class MatsuiZaimSyncService {
    *
    * 一部の口座だけ登録に成功した状態で後続の口座が失敗しても二重登録にならないよう、
    * 登録に成功した口座ごとに総額記録ファイルを保存する。
+   * 送信後に結果を確認できなかった場合（RegistrationUnconfirmedError）も、登録済みとみなして保存してからエラーを再スローする。
    *
    * @param account アカウントの設定
    * @param currentAmount 現在の評価額
@@ -307,6 +308,15 @@ export class MatsuiZaimSyncService {
       await this.captureErrorContext(this.zaimRegistrar.activePage, error as Error, {
         accountName: account.name,
       });
+      if (error instanceof RegistrationUnconfirmedError && !dryRun) {
+        // 登録済みの可能性があるため、再実行で二重登録にならないよう総額データを更新する
+        this.saveTotalAmount(account, currentAmount, lastTotalAmounts, lastTotalAmountItem);
+        logger.error(
+          `${account.name}の登録結果を確認できなかったため、登録済みとみなして総額データを更新しました。` +
+            `Zaim で ${dayjs().format("YYYY-MM-DD")} の ${amount} 円の収入が登録されているか確認し、` +
+            "登録されていない場合は手動で登録してください。",
+        );
+      }
       throw error;
     }
 
@@ -316,7 +326,23 @@ export class MatsuiZaimSyncService {
     }
     logger.info(`${account.name}のZaimへの記録が完了しました。`);
 
-    // 総額データに反映して保存
+    this.saveTotalAmount(account, currentAmount, lastTotalAmounts, lastTotalAmountItem);
+  }
+
+  /**
+   * 口座の総額データを現在の評価額に更新し、総額記録ファイルに保存する
+   *
+   * @param account アカウントの設定
+   * @param currentAmount 現在の評価額
+   * @param lastTotalAmounts 前回記録時点の総額データ一覧（更新される）
+   * @param lastTotalAmountItem 口座の前回記録時点の総額データ（ない場合は追加する）
+   */
+  private saveTotalAmount(
+    account: AccountConfig,
+    currentAmount: number,
+    lastTotalAmounts: LastTotalAmount[],
+    lastTotalAmountItem: LastTotalAmount | undefined,
+  ): void {
     if (lastTotalAmountItem) {
       lastTotalAmountItem.amount = currentAmount;
       lastTotalAmountItem.updatedAt = dayjs().format();
