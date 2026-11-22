@@ -15,7 +15,7 @@ const { ZAIM_TOTAL_AMOUNT_FILE, MATSUI_LOGIN_METHOD, ZAIM_REGISTER_METHOD } = pr
  * 環境変数 ZAIM_REGISTER_METHOD に応じた収入登録方式を生成する
  */
 function createZaimRegistrar(): ZaimRegistrar {
-  switch (ZAIM_REGISTER_METHOD ?? "api") {
+  switch (ZAIM_REGISTER_METHOD || "api") {
     case "api":
       return new ZaimApiRegistrar(new Zaim());
     case "web":
