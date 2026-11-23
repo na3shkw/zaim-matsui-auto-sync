@@ -1,5 +1,12 @@
 # Changelog
 
+## [v0.8.0](https://github.com/na3shkw/zaim-matsui-auto-sync/compare/v0.7.0...v0.8.0) - 2026-11-23
+
+### New Features 🎉
+- feat: Zaim のウェブ画面を操作して収入を登録できるようにする by @na3shkw in https://github.com/na3shkw/zaim-matsui-auto-sync/pull/110
+### Other Changes
+- refactor: ブラウザ管理と収入登録の処理を共通化する by @na3shkw in https://github.com/na3shkw/zaim-matsui-auto-sync/pull/109
+
 ## [v0.7.0](https://github.com/na3shkw/zaim-matsui-auto-sync/compare/v0.6.4...v0.7.0) - 2026-11-08
 
 ### Bug Fixes 🐛
