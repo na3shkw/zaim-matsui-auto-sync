@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { parseNumber } from "./utils.js";
+import { joinUrl, parseNumber } from "./utils.js";
 
 describe("parseNumber", () => {
   it("数字の文字列を正しく数値に変換する", () => {
@@ -63,5 +63,14 @@ describe("parseNumber", () => {
   it("先頭や末尾にカンマがある場合を処理する", () => {
     expect(parseNumber(",123")).toBe(123);
     expect(parseNumber("123,")).toBe(123);
+  });
+});
+
+describe("joinUrl", () => {
+  it("パスの先頭のスラッシュの有無にかかわらず、ベースURLとパスを1つのスラッシュで結合する", () => {
+    expect(joinUrl("https://example.com", "/path/to/page?key=value")).toBe(
+      "https://example.com/path/to/page?key=value",
+    );
+    expect(joinUrl("https://example.com", "home")).toBe("https://example.com/home");
   });
 });

@@ -2,7 +2,6 @@ import fs from "fs";
 import path from "path";
 import type { CDPSession, Page } from "playwright";
 import { logger } from "../../../logger.js";
-import { saveStorageState } from "../../browser.js";
 import { MatsuiPage } from "../../page.js";
 import type { MatsuiLoginMethod } from "../login-method.js";
 
@@ -58,9 +57,6 @@ export class PasskeyLoginMethod implements MatsuiLoginMethod {
 
     // ログイン成功後に signCount をインクリメントして保存
     await this.updateSignCount(cdpSession, authenticatorId, credential, credentialFile);
-
-    // ログイン成功後にストレージ状態を保存
-    await saveStorageState(page.context(), CHROMIUM_USER_DATA_DIR_MATSUI!);
   }
 
   private async setupVirtualAuthenticator(
@@ -110,7 +106,9 @@ export class PasskeyLoginMethod implements MatsuiLoginMethod {
       );
       logger.info("パスキーの資格情報を更新しました。");
     } else {
-      logger.warn("仮想認証器からパスキーの資格情報が見つかりませんでした。signCount が更新されていません。");
+      logger.warn(
+        "仮想認証器からパスキーの資格情報が見つかりませんでした。signCount が更新されていません。",
+      );
     }
   }
 }

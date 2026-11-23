@@ -1,3 +1,5 @@
+import { joinUrl } from "../utils.js";
+
 /**
  * 松井証券の各ページのURL
  */
@@ -8,77 +10,65 @@ export class MatsuiPage {
   private static readonly MATSUI_USSTOCK_BASE_URL = "https://usstock.matsui.co.jp";
 
   /**
-   * ベースURLとパスを結合し、正規化された完全なURLを返す。
-   *
-   * @param baseUrl - ベースとなるURL
-   * @param path - URLパス
-   * @returns 正規化された完全なURL
-   */
-  private static getFullUrl(baseUrl: string, path: string): string {
-    const normalizedPath = path.startsWith("/") ? path.substring(1) : path;
-    return `${baseUrl}/${normalizedPath}`;
-  }
-
-  /**
    * 投資信託残高照会のURL
    */
   static get position(): string {
-    return this.getFullUrl(this.MATSUI_FUND_BASE_URL, "/ra/robo-advisor/page/main.html#!/position");
+    return joinUrl(this.MATSUI_FUND_BASE_URL, "/ra/robo-advisor/page/main.html#!/position");
   }
 
   /**
    * お客様サイトメンテナンスページのURL
    */
   static get tradeMente(): string {
-    return this.getFullUrl(this.MATSUI_WWW_BASE_URL, "/nw/mente/trade_mainte.html");
+    return joinUrl(this.MATSUI_WWW_BASE_URL, "/nw/mente/trade_mainte.html");
   }
 
   /**
    * お客様サイトログインURL
    */
   static get tradeLogin(): string {
-    return this.getFullUrl(this.MATSUI_TRADE_BASE_URL, "/mgap/login");
+    return joinUrl(this.MATSUI_TRADE_BASE_URL, "/mgap/login");
   }
 
   /**
    * お客様サイトホームページURL
    */
   static get tradeMemberHome(): string {
-    return this.getFullUrl(this.MATSUI_TRADE_BASE_URL, "/mgap/member");
+    return joinUrl(this.MATSUI_TRADE_BASE_URL, "/mgap/member");
   }
 
   /**
    * 米国株取引トップページURL
    */
   static get usStockTradeTop(): string {
-    return this.getFullUrl(this.MATSUI_TRADE_BASE_URL, "/mgap/member#us-stock-trade-top");
+    return joinUrl(this.MATSUI_TRADE_BASE_URL, "/mgap/member#us-stock-trade-top");
   }
 
   /**
    * 米国株用サイトのホームページURL
    */
   static get usStockHome(): string {
-    return this.getFullUrl(this.MATSUI_USSTOCK_BASE_URL, "/web/#/equity/home");
+    return joinUrl(this.MATSUI_USSTOCK_BASE_URL, "/web/#/equity/home");
   }
 
   /**
    * 米国株用サイトの保有資産ページURL
    */
   static get usStockPosition(): string {
-    return this.getFullUrl(this.MATSUI_USSTOCK_BASE_URL, "/web/#/equity/asset-info/position-view");
+    return joinUrl(this.MATSUI_USSTOCK_BASE_URL, "/web/#/equity/asset-info/position-view");
   }
 
   /**
    * 米国株用サイトの余力情報ページURL
    */
   static get usStockAssetPower(): string {
-    return this.getFullUrl(this.MATSUI_USSTOCK_BASE_URL, "/web/#/equity/asset-info/power");
+    return joinUrl(this.MATSUI_USSTOCK_BASE_URL, "/web/#/equity/asset-info/power");
   }
 
   /**
    * 米国株用サイトのお知らせページURL
    */
   static get usStockNotify(): string {
-    return this.getFullUrl(this.MATSUI_USSTOCK_BASE_URL, "/web/#/notify");
+    return joinUrl(this.MATSUI_USSTOCK_BASE_URL, "/web/#/notify");
   }
 }

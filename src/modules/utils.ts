@@ -33,3 +33,15 @@ export function parseNumber(input: string): number | undefined {
   const parsedNumber = Number(normalizedInput);
   return isNaN(parsedNumber) ? undefined : parsedNumber;
 }
+
+/**
+ * ベースURLとパスを結合し、正規化された完全なURLを返す。
+ *
+ * @param baseUrl ベースとなるURL（末尾のスラッシュなし）
+ * @param path URLパス（先頭のスラッシュは有無どちらでもよい）
+ * @returns 完全なURL
+ */
+export function joinUrl(baseUrl: string, path: string): string {
+  const normalizedPath = path.startsWith("/") ? path.substring(1) : path;
+  return `${baseUrl}/${normalizedPath}`;
+}
