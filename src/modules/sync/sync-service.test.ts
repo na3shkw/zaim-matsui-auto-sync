@@ -3,7 +3,7 @@ import { describe, expect, it, vi } from "vitest";
 import type { AppConfig } from "../config.js";
 import type { MatsuiLoginMethod } from "../matsui/login-methods/login-method.js";
 import type { MatsuiScraper } from "../matsui/scraper.js";
-import type { ZaimRegistrar } from "./zaim-registrar.js";
+import { RegistrationUnconfirmedError, type ZaimRegistrar } from "./zaim-registrar.js";
 import type { TotalAmountRepository } from "./total-amount-repository.js";
 
 vi.mock("fs");
@@ -171,6 +171,41 @@ describe("MatsuiZaimSyncService の口座ごとの処理", () => {
         expect.objectContaining({ accountId: 2, amount: 2000 }),
       ],
     ]);
+  });
+
+  it("登録結果を確認できなかった口座は、登録済みとみなして総額を保存してからエラーにする", async () => {
+    const registerIncome = vi
+      .fn()
+      .mockRejectedValueOnce(new RegistrationUnconfirmedError("結果不明"));
+    const { service, savedSnapshots, zaimRegistrar } = setup({
+      amounts: { ファンドA: 1500, ファンドB: 2500 },
+      lastTotalAmounts: [{ accountId: 2, amount: 2000, updatedAt: "" }],
+      registerIncome,
+    });
+
+    await expect(service.sync(twoAccountsConfig, { dryRun: false })).rejects.toThrow("結果不明");
+
+    // 後続の口座は登録しない
+    expect(zaimRegistrar.registerIncome).toHaveBeenCalledTimes(1);
+    expect(savedSnapshots).toEqual([
+      [
+        expect.objectContaining({ accountId: 2, amount: 2000 }),
+        expect.objectContaining({ accountId: 1, amount: 1500 }),
+      ],
+    ]);
+  });
+
+  it("ドライランでは、登録結果を確認できなくても総額を保存しない", async () => {
+    const registerIncome = vi.fn().mockRejectedValue(new RegistrationUnconfirmedError("結果不明"));
+    const { service, totalAmountRepo } = setup({
+      amounts: { ファンドA: 1500, ファンドB: 2500 },
+      lastTotalAmounts: [],
+      registerIncome,
+    });
+
+    await expect(service.sync(twoAccountsConfig, { dryRun: true })).rejects.toThrow("結果不明");
+
+    expect(totalAmountRepo.save).not.toHaveBeenCalled();
   });
 
   it("前回総額がない口座は、登録に成功した後に追加して保存する", async () => {

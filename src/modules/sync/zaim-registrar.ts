@@ -4,6 +4,18 @@ import type { Zaim } from "../zaim/client.js";
 import type { RegisterIncomeJournalEntryParam } from "../zaim/types.js";
 
 /**
+ * 登録の送信後に結果を確認できず、Zaim に登録されたかどうかが不明であることを表すエラー
+ *
+ * 再実行で二重登録にならないよう、呼び出し側は登録済みとみなして扱う。
+ */
+export class RegistrationUnconfirmedError extends Error {
+  constructor(message: string, options?: ErrorOptions) {
+    super(message, options);
+    this.name = "RegistrationUnconfirmedError";
+  }
+}
+
+/**
  * 収入登録のオプション
  */
 export interface RegisterIncomeOptions {

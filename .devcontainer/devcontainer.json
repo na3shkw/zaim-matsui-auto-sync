@@ -19,6 +19,7 @@
 		"PROMPT_COMMAND": "history -a",
 		"CHROMIUM_USER_DATA_DIR_GOOGLE": "/workspaces/zaim-matsui-auto-sync/appdata/chromium/google",
 		"CHROMIUM_USER_DATA_DIR_MATSUI": "/workspaces/zaim-matsui-auto-sync/appdata/chromium/matsui",
+		"CHROMIUM_USER_DATA_DIR_ZAIM": "/workspaces/zaim-matsui-auto-sync/appdata/chromium/zaim",
 		"ZAIM_ACCESS_TOKEN_FILE": "/workspaces/zaim-matsui-auto-sync/appdata/zaim/zaim-tokens.json",
 		"ZAIM_TOTAL_AMOUNT_FILE": "/workspaces/zaim-matsui-auto-sync/appdata/zaim/zaim-total-amount.json",
 		"ERROR_LOG_DIR": "/workspaces/zaim-matsui-auto-sync/appdata/error-logs",
